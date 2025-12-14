@@ -625,6 +625,23 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        /* ▼▼▼ 追加: iOSノッチ対策 ▼▼▼ */
+
+        /* 1. 通知（トースト）の位置修正 */
+        #toast {
+            /* top-5 (1.25rem) を上書きし、ノッチの高さ + 余裕を持たせる */
+            top: calc(env(safe-area-inset-top, 20px) + 1rem) !important;
+        }
+
+        /* 2. クイズモーダルのヘッダー修正 */
+        #quiz-modal header {
+            /* 上部にセーフエリア分の余白を追加 + 元のp-3(0.75rem) */
+            padding-top: calc(env(safe-area-inset-top, 20px) + 0.75rem);
+            /* ヘッダーの高さを確保 */
+            height: auto;
+            /* 下部の余白は維持 */
+            padding-bottom: 0.75rem;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
