@@ -5803,14 +5803,6 @@
                 
                 lucide.createIcons();
             }; 
-        
-        // --- カウントダウンモーダル関連のボタン ---
-        $('#add-countdown-btn').addEventListener('click', () => openCountdownModal());
-        $('#countdown-save-btn').addEventListener('click', saveCountdown);
-        $('#countdown-cancel-btn').addEventListener('click', () => {
-            $('#countdown-modal').style.display = 'none';
-        });
-        $('#countdown-delete-btn').addEventListener('click', deleteCountdown);
             
             init();
         });
