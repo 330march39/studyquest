@@ -507,14 +507,31 @@
             padding-bottom: env(safe-area-inset-bottom, 10px);
         }
         
-        /* ナビゲーションバー専用: コンテンツ領域の高さを維持しつつ、パディングで背景を伸ばす */
         .nav-safe {
-            /* box-sizing: content-box; を削除または border-box に変更 */
+            /* パディングを含めたサイズ計算にする */
             box-sizing: border-box; 
             
-            /* 安全領域を含めた高さを計算して固定 */
-            height: calc(3.5rem + env(safe-area-inset-bottom, 10px));
-            padding-bottom: env(safe-area-inset-bottom, 10px);
+            /* 高さ = コンテンツ部分(3.5rem) + セーフエリア(下) */
+            /* これにより、アイコンエリア(3.5rem)が確保されます */
+            height: calc(3.5rem + env(safe-area-inset-bottom, 20px));
+            
+            /* 下部にセーフエリア分の余白を作る */
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+            
+            /* アイコン配置の設定 */
+            display: flex;
+            align-items: center; /* 縦方向は中央揃え（paddingを除いたエリア内で） */
+        }
+        
+        /* ついでに、5つのアイコンが並んでも崩れないように調整 */
+        .tab-btn span {
+            font-size: 10px; /* 文字サイズを少し小さくして収まりやすく */
+            white-space: nowrap; /* 折り返し禁止 */
+            transform: scale(0.9); /* 必要なら少し縮小 */
+        }
+        
+        .tab-btn i, .tab-btn svg {
+            flex-shrink: 0; /* アイコンが潰れるのを防ぐ */
         }
         
         /* 固定配置の要素を、セーフティエリア分だけ上に押し上げる */
@@ -887,7 +904,7 @@
             </div>
         </div>
 
-        <nav class="nav-safe fixed bottom-0 left-0 right-0 max-w-lg mx-auto h-14 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
+        <nav class="nav-safe fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text" data-page="home-page" data-title="ホーム"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs mt-1">ホーム</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="study-page" data-title="学習"><i data-lucide="book-marked" class="w-6 h-6"></i><span class="text-xs mt-1">学習</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="focus-page" data-title="集中"><i data-lucide="timer" class="w-6 h-6"></i><span class="text-xs mt-1">集中</span></button>
