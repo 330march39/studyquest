@@ -1935,7 +1935,7 @@
 
                 // 3. ログインボーナス処理 (元のロジックをそのまま流用)
                 if(state.lastLogin !== new Date().toDateString()){
-                    addLP(10000, 'ログインボーナス', false);
+                    addLP(10000, 'ログインボーナス', true);
                     state.lastLogin = new Date().toDateString();
                     saveState(); // stateが完全に構築された後に保存
                 }
