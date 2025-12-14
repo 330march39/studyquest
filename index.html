@@ -640,7 +640,7 @@
             <h1 id="header-title" class="text-lg font-bold text-gray-900 dark:text-white">ホーム</h1>
             
             <button id="lp-button" class="flex items-center space-x-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors border border-yellow-200 dark:border-yellow-700">
-                <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                <img src="coin.png" alt="Coin" class="w-4 h-4 object-contain">
                 <span id="lp-display" class="font-bold text-xs">0 LP</span>
             </button>
         </header>
@@ -1289,8 +1289,12 @@
         </header>
 
         <div class="bg-gray-50 dark:bg-gray-800/50 p-6 text-center flex-shrink-0">
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">現在の学習ポイント</p>
-            <p class="text-5xl font-bold primary-text" id="status-lp-display">0</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">現在のラーニングポイント</p>
+            
+            <div class="flex items-center justify-center space-x-3 mb-1">
+                <img src="coin.png" alt="Coin" class="w-12 h-12 object-contain drop-shadow-md">
+                <p class="text-5xl font-bold primary-text" id="status-lp-display">0</p>
+            </div>
             <p class="text-xs text-gray-400 mt-2">学習してLPを貯め、アイテムと交換しよう</p>
         </div>
 
