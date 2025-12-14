@@ -290,6 +290,21 @@
             -ms-user-select: text;     /* IE */
             user-select: text;         /* 標準 */
         }
+
+        /* ▼▼▼ 追加: iOSの日付入力はみ出し対策 ▼▼▼ */
+        input[type="date"] {
+            /* iOS独自のスタイルをリセット */
+            -webkit-appearance: none;
+            appearance: none;
+            /* 親要素からはみ出さないように最大幅を制限 */
+            max-width: 100%;
+            /* コンテンツが小さくなれるようにする（Flexbox対策） */
+            min-width: 0;
+            /* ボックスサイズの計算を確実にする */
+            box-sizing: border-box;
+            /* 背景色が消えないようにする */
+            background-color: inherit; 
+        }
         
         /* 3. 画像やSVGアイコンの長押しメニュー（保存など）を禁止 (主にiOS) */
         img, svg {
