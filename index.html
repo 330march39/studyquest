@@ -15,10 +15,13 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100dvh; /* 画面の高さいっぱいに固定 */
+            height: 100%; /* 100dvh から 100% に変更 */
+            position: fixed; /* ★追加: 画面位置を完全に固定 */
+            inset: 0;        /* ★追加: 上下左右0位置に固定 */
             background-color: #ffffff;
-            overflow: hidden; /* 画面全体のはみ出しを禁止 */
-            overscroll-behavior-y: none; /* iOSのバウンススクロールを禁止 */
+            overflow: hidden; 
+            overscroll-behavior-y: none;
+            z-index: 0; /*念のため */
         }
 
         /* 2. スプラッシュスクリーンの設定 */
@@ -192,15 +195,18 @@
         }
 
         #app-container {
+            position: absolute; /* ★追加 */
+            top: 0; left: 0; right: 0; bottom: 0; /* ★追加: 四隅に固定 */
+            width: 100%;
+            height: 100%; /* 画面いっぱいに広げる */
+            
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            /* ▼▼▼ 追加: アニメーション用設定 ▼▼▼ */
             transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
             will-change: transform;
             transform-origin: center left;
         }
-
         /* ▼▼▼ 追加: プロフィールが開いている時のメイン画面の状態 ▼▼▼ */
         #app-container.background-pushed {
             transform: translateX(-30%); /* 左に少しずれる */
@@ -503,8 +509,12 @@
         
         /* ナビゲーションバー専用: コンテンツ領域の高さを維持しつつ、パディングで背景を伸ばす */
         .nav-safe {
+            /* box-sizing: content-box; を削除または border-box に変更 */
+            box-sizing: border-box; 
+            
+            /* 安全領域を含めた高さを計算して固定 */
+            height: calc(3.5rem + env(safe-area-inset-bottom, 10px));
             padding-bottom: env(safe-area-inset-bottom, 10px);
-            box-sizing: content-box; /* これが重要: height:64pxの中にパディングを含めない設定 */
         }
         
         /* 固定配置の要素を、セーフティエリア分だけ上に押し上げる */
@@ -646,7 +656,7 @@
         }
     </style>
 </head>
-<body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased fixed inset-0">
+<body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden antialiased">
     <div id="splash-screen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-500">
         <img id="splash-logo-light" src="SQ_logo2.png" alt="StudyQuest Logo" class="w-64 h-64 mb-4 block dark:hidden">
         
