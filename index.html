@@ -1323,6 +1323,31 @@
             <div class="h-20"></div> </div>
     </div>
 
+    <div id="break-settings-screen" class="screen-layer">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-break-settings-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">ブレイクタイム設定</h2>
+            <div class="flex-1"></div>
+        </header>
+        
+        <div class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">休憩中に表示するアプリやWebサイトを設定します。</p>
+
+            <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 px-1">表示中 (ドラッグで並び替え)</h4>
+            <div id="break-active-list" class="w-full space-y-2"></div>
+
+            <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-6 mb-2 px-1">追加可能</h4>
+            <div id="break-inactive-list" class="w-full flex flex-wrap gap-2"></div>
+        </div>
+    </div>
+
     <!-- ===== モーダル ===== -->
     <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 flex-col hidden"><div class="w-full h-full max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 flex flex-col"><header class="p-3 flex items-center justify-between shadow-md bg-white dark:bg-gray-800"><h2 id="quiz-modal-title" class="truncate font-bold"></h2><button class="close-modal-btn p-1" data-modal="quiz-modal"><i data-lucide="x"></i></button></header><div class="flex-grow relative"><div class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div><iframe id="quiz-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-forms allow-popups"></iframe></div></div></div>
     <div id="assessment-modal" class="hidden fixed inset-0 bg-black/70 z-[210] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
@@ -1602,24 +1627,6 @@
                     終了してホームへ
                 </button>
             </div>
-        </div>
-    </div>
-    
-    <div id="break-settings-modal" class="hidden fixed inset-0 bg-black/70 z-[210] flex items-center justify-center p-4">
-        <div class="bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-sm flex flex-col items-center max-h-[80vh]">
-            <h3 class="text-lg font-bold text-white mb-4 text-center flex-shrink-0">コンテンツの編集</h3>
-            
-            <div class="w-full flex-grow overflow-y-auto mb-4">
-                <h4 class="text-xs font-bold text-gray-400 mb-2 px-1">表示中 (ドラッグで並び替え)</h4>
-                <div id="break-active-list" class="w-full space-y-2"></div>
-    
-                <h4 class="text-xs font-bold text-gray-400 mt-6 mb-2 px-1">追加可能</h4>
-                <div id="break-inactive-list" class="w-full flex flex-wrap gap-2"></div>
-            </div>
-    
-            <button id="break-settings-close-btn" class="mt-2 px-6 py-2 rounded-lg primary-bg primary-bg-hover text-white font-semibold transition flex-shrink-0">
-                閉じる
-            </button>
         </div>
     </div>
     
@@ -2628,7 +2635,7 @@
 
                         // ★追加: ブレイクタイム設定
                         questList.appendChild(createListItem('coffee', 'ブレイクタイム設定', 'bg-orange-500', () => {
-                            openBreakSettingsModal();
+                            breakSettingsPage.open();
                         }));
                         
                         settingsPage.appendChild(questList);
@@ -4365,118 +4372,106 @@
             saveState();
         }
 
-        // ★修正後★ 休憩設定モーダルの中身を描画する関数
-        function renderBreakSettingsModal() {
-            const activeContainer = $('#break-active-list');
-            const inactiveContainer = $('#break-inactive-list');
-            
-            if (!activeContainer || !inactiveContainer) return;
-        
-            activeContainer.innerHTML = '';
-            inactiveContainer.innerHTML = '';
-        
-            // 1. アイコンを表示中と非表示に分ける
-            const activeIcons = state.breakIcons.filter(i => i.visible);
-            const inactiveIcons = state.breakIcons.filter(i => !i.visible);
-        
-            // 2. 表示中リストの描画 (削除ボタン付き)
-            if (activeIcons.length === 0) {
-                activeContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">表示するコンテンツがありません</p>';
-            } else {
-                activeContainer.innerHTML = activeIcons.map(icon => `
-                    <div class="break-settings-item flex items-center bg-white/5 p-3 rounded-lg border border-white/10 mb-2 touch-none" data-id="${icon.id}">
-                        <div class="break-settings-handle p-2 mr-1 cursor-grab active:cursor-grabbing text-gray-400">
-                             <i data-lucide="grip-vertical" class="w-6 h-6"></i>
-                        </div>
-                        <div class="flex items-center justify-center w-8 h-8 mr-3 text-gray-200">
-                            <i data-lucide="${icon.icon}" class="w-6 h-6"></i>
-                        </div>
-                        <span class="text-gray-200 flex-grow text-sm font-bold truncate">${icon.name}</span>
-                        <button class="remove-break-btn p-2 rounded-full text-red-400 hover:bg-red-500/20 transition flex-shrink-0">
-                            <i data-lucide="minus-circle" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                `).join('');
-            }
-        
-            // 3. 追加可能リストの描画 (追加ボタン付き)
-            if (inactiveIcons.length === 0) {
-                inactiveContainer.innerHTML = '<p class="text-xs text-gray-500 w-full text-center">すべて追加済みです</p>';
-            } else {
-                inactiveContainer.innerHTML = inactiveIcons.map(icon => `
-                    <button class="add-break-btn flex items-center space-x-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-full transition" data-id="${icon.id}">
-                        <i data-lucide="plus" class="w-4 h-4 text-green-400"></i>
-                        <span class="text-sm text-gray-300">${icon.name}</span>
-                    </button>
-                `).join('');
-            }
-        
-            // ★アイコンを確実に生成（対象コンテナを指定）
-            lucide.createIcons({ root: activeContainer });
-            lucide.createIcons({ root: inactiveContainer });
-        
-            // 4. イベントリスナー設定：削除ボタン
-            activeContainer.querySelectorAll('.remove-break-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const itemId = e.target.closest('.break-settings-item').dataset.id;
-                    const icon = state.breakIcons.find(i => i.id === itemId);
-                    if (icon) {
-                        icon.visible = false;
-                        saveState();
-                        renderBreakSettingsModal(); // 再描画
-                        renderBreakIcons(); // 親画面も更新
-                    }
-                });
-            });
-        
-            // 5. イベントリスナー設定：追加ボタン
-            inactiveContainer.querySelectorAll('.add-break-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const itemId = btn.dataset.id;
-                    const icon = state.breakIcons.find(i => i.id === itemId);
-                    if (icon) {
-                        icon.visible = true;
-                        saveState();
-                        renderBreakSettingsModal(); // 再描画
-                        renderBreakIcons(); // 親画面も更新
-                    }
-                });
-            });
-        
-            // 6. Sortable.js の適用 (重複防止ロジック追加)
-            // 以前のインスタンスがあれば破棄する
-            if (breakSortable) {
-                breakSortable.destroy();
-            }
-
-            // 新しく作成する
-            breakSortable = Sortable.create(activeContainer, {
-                handle: '.break-settings-handle',
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                delay: 100, // 少しだけ長押し判定を入れるとスクロールと干渉しにくい
-                delayOnTouchOnly: true,
-                touchStartThreshold: 5,
-                onEnd: (evt) => {
-                    // 並び替え後のID順序を取得
-                    const idOrder = Array.from(activeContainer.children).map(child => child.dataset.id);
+        // --- 6. ブレイクタイム設定サブページ (新規追加) ---
+            const breakSettingsPage = new SubPage('break-settings-screen', {
+                onOpen: () => {
+                    const activeContainer = $('#break-active-list');
+                    const inactiveContainer = $('#break-inactive-list');
                     
-                    // state.breakIcons を並び替える
-                    const sortedActive = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean); // filter(Boolean)でundefined排除
-                    const inactive = state.breakIcons.filter(i => !i.visible);
+                    if (!activeContainer || !inactiveContainer) return;
+        
+                    activeContainer.innerHTML = '';
+                    inactiveContainer.innerHTML = '';
+        
+                    // 1. アイコンを表示中と非表示に分ける
+                    const activeIcons = state.breakIcons.filter(i => i.visible);
+                    const inactiveIcons = state.breakIcons.filter(i => !i.visible);
+        
+                    // 2. 表示中リストの描画 (削除ボタン付き)
+                    if (activeIcons.length === 0) {
+                        activeContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-4 bg-white dark:bg-gray-700 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">表示するコンテンツがありません</p>';
+                    } else {
+                        activeContainer.innerHTML = activeIcons.map(icon => `
+                            <div class="break-settings-item flex items-center bg-white dark:bg-gray-700 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 mb-2 touch-none" data-id="${icon.id}">
+                                <div class="break-settings-handle p-2 mr-1 cursor-grab active:cursor-grabbing text-gray-400">
+                                     <i data-lucide="grip-vertical" class="w-6 h-6"></i>
+                                </div>
+                                <div class="flex items-center justify-center w-8 h-8 mr-3 text-gray-600 dark:text-gray-300">
+                                    <i data-lucide="${icon.icon}" class="w-6 h-6"></i>
+                                </div>
+                                <span class="text-gray-800 dark:text-gray-200 flex-grow text-sm font-bold truncate">${icon.name}</span>
+                                <button class="remove-break-btn p-2 rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition flex-shrink-0">
+                                    <i data-lucide="minus-circle" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        `).join('');
+                    }
+        
+                    // 3. 追加可能リストの描画 (追加ボタン付き)
+                    if (inactiveIcons.length === 0) {
+                        inactiveContainer.innerHTML = '<p class="text-xs text-gray-500 w-full text-center py-2">すべて追加済みです</p>';
+                    } else {
+                        inactiveContainer.innerHTML = inactiveIcons.map(icon => `
+                            <button class="add-break-btn flex items-center space-x-2 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 px-3 py-2 rounded-full transition shadow-sm" data-id="${icon.id}">
+                                <i data-lucide="plus" class="w-4 h-4 text-green-500"></i>
+                                <span class="text-sm text-gray-700 dark:text-gray-300">${icon.name}</span>
+                            </button>
+                        `).join('');
+                    }
+        
+                    // アイコン生成
+                    lucide.createIcons({ root: activeContainer });
+                    lucide.createIcons({ root: inactiveContainer });
+        
+                    // 4. イベントリスナー設定：削除ボタン
+                    activeContainer.querySelectorAll('.remove-break-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const itemId = e.target.closest('.break-settings-item').dataset.id;
+                            const icon = state.breakIcons.find(i => i.id === itemId);
+                            if (icon) {
+                                icon.visible = false;
+                                saveState();
+                                breakSettingsPage.onOpen(); // 再描画 (自分自身を呼ぶ)
+                            }
+                        });
+                    });
+        
+                    // 5. イベントリスナー設定：追加ボタン
+                    inactiveContainer.querySelectorAll('.add-break-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const itemId = btn.dataset.id;
+                            const icon = state.breakIcons.find(i => i.id === itemId);
+                            if (icon) {
+                                icon.visible = true;
+                                saveState();
+                                breakSettingsPage.onOpen(); // 再描画
+                            }
+                        });
+                    });
+        
+                    // 6. Sortable.js の適用
+                    if (breakSortable) breakSortable.destroy();
                     
-                    state.breakIcons = [...sortedActive, ...inactive];
-                    saveState();
-                    renderBreakIcons(); // 親画面の並び順も更新
+                    breakSortable = Sortable.create(activeContainer, {
+                        handle: '.break-settings-handle',
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        delay: 100, 
+                        delayOnTouchOnly: true,
+                        touchStartThreshold: 5,
+                        onEnd: (evt) => {
+                            const idOrder = Array.from(activeContainer.children).map(child => child.dataset.id);
+                            const sortedActive = idOrder.map(id => state.breakIcons.find(i => i.id === id)).filter(Boolean);
+                            const inactive = state.breakIcons.filter(i => !i.visible);
+                            
+                            state.breakIcons = [...sortedActive, ...inactive];
+                            saveState();
+                        }
+                    });
                 }
             });
-        }
-            
-        // ★新規追加★ 休憩設定モーダルを開く関数
-        function openBreakSettingsModal() {
-            renderBreakSettingsModal(); // 1. 中身を描画
-            $('#break-settings-modal').style.display = 'flex'; // 2. モーダルを表示
-        }
+            // 戻るボタンの紐付け
+            $('#close-break-settings-btn').addEventListener('click', () => breakSettingsPage.close());
 
         /* ▲▲▲ 追加: クエスト機能の関数群 ▲▲▲ */
         
