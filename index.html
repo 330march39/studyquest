@@ -1887,6 +1887,166 @@
                 }
             }
 
+            // ==========================================
+            // ▼▼▼ 汎用サブページ管理クラス (これ1つで全ページ対応) ▼▼▼
+            // ==========================================
+            class SubPage {
+                constructor(elementId, options = {}) {
+                    this.el = document.getElementById(elementId);
+                    this.appContainer = document.getElementById('app-container');
+                    this.onOpen = options.onOpen || null;   // 開くときに実行する関数
+                    this.onClose = options.onClose || null; // 閉じるときに実行する関数
+                    
+                    this.closeTimer = null;
+
+                    // スワイプ制御用変数
+                    this.touchStartX = 0;
+                    this.touchStartY = 0;
+                    this.touchCurrentX = 0;
+                    this.isEdgeSwipe = false;
+                    this.swipeTouchId = null;
+
+                    // 初期化
+                    this.initEvents();
+                }
+
+                // イベントリスナーの設定
+                initEvents() {
+                    if (!this.el) return;
+
+                    // タッチ開始
+                    this.el.addEventListener('touchstart', (e) => {
+                        if (this.isEdgeSwipe) return;
+                        const touch = e.changedTouches[0];
+                        this.touchStartX = touch.clientX;
+                        this.touchStartY = touch.clientY;
+
+                        // 画面左端(50px以内)からの操作のみスワイプバックとみなす
+                        if (this.touchStartX < 50) {
+                            this.isEdgeSwipe = true;
+                            this.swipeTouchId = touch.identifier;
+                            this.el.classList.add('is-swiping');
+                            this.appContainer.style.transition = 'none';
+                        }
+                    }, { passive: true });
+
+                    // タッチ移動
+                    this.el.addEventListener('touchmove', (e) => {
+                        if (!this.isEdgeSwipe) return;
+                        
+                        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.swipeTouchId);
+                        if (!touch) return;
+
+                        this.touchCurrentX = touch.clientX;
+                        const currentY = touch.clientY;
+
+                        const diffX = this.touchCurrentX - this.touchStartX;
+                        const diffY = currentY - this.touchStartY;
+
+                        // ▼▼▼ 縦移動判定 (縦スクロール中はスワイプバックをキャンセル) ▼▼▼
+                        if (Math.abs(diffY) > Math.abs(diffX)) {
+                            this.resetSwipeState();
+                            return;
+                        }
+
+                        if (diffX > 0) {
+                            if (e.cancelable) e.preventDefault();
+                            
+                            // ページの移動
+                            this.el.style.transform = `translateX(${diffX}px)`;
+                            
+                            // 背景（メイン画面）のパララックス移動
+                            const screenWidth = window.innerWidth;
+                            const progress = Math.min(diffX / screenWidth, 1);
+                            const startX = -30;
+                            const currentMainX = startX + (Math.abs(startX) * progress);
+                            this.appContainer.style.transform = `translateX(${currentMainX}%)`;
+                        }
+                    }, { passive: false });
+
+                    // タッチ終了
+                    this.el.addEventListener('touchend', (e) => {
+                        if (!this.isEdgeSwipe) return;
+                        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.swipeTouchId);
+                        if (!touch) return;
+
+                        this.el.classList.remove('is-swiping');
+                        this.appContainer.style.transition = '';
+
+                        const diff = this.touchCurrentX - this.touchStartX;
+                        const threshold = window.innerWidth / 3; // 画面の1/3以上動かしたら閉じる
+
+                        if (diff > threshold) {
+                            this.close(); // 閉じる
+                        } else {
+                            this.resetPosition(); // 元に戻す
+                        }
+                        
+                        this.isEdgeSwipe = false;
+                        this.swipeTouchId = null;
+                    });
+                }
+
+                // スワイプ中断時のリセット
+                resetSwipeState() {
+                    this.isEdgeSwipe = false;
+                    this.el.classList.remove('is-swiping');
+                    this.appContainer.style.transition = '';
+                    this.resetPosition();
+                }
+
+                // 位置を元に戻す（キャンセル時）
+                resetPosition() {
+                    this.el.style.transform = '';
+                    this.appContainer.style.transform = '';
+                    this.appContainer.style.filter = '';
+                }
+
+                // ページを開く
+                open() {
+                    if (this.closeTimer) {
+                        clearTimeout(this.closeTimer);
+                        this.closeTimer = null;
+                    }
+
+                    // 開く前の処理（データの描画など）
+                    if (this.onOpen) this.onOpen();
+
+                    // スタイルリセット
+                    this.resetPosition();
+                    
+                    // 表示＆アニメーション
+                    this.el.style.display = 'flex';
+                    void this.el.offsetWidth; // リフロー強制
+                    this.el.classList.add('active');
+                    
+                    // メイン画面を奥へ
+                    this.appContainer.classList.add('background-pushed');
+                }
+
+                // ページを閉じる
+                close() {
+                    this.el.classList.remove('active');
+                    
+                    // 閉じる前の処理
+                    if (this.onClose) this.onClose();
+
+                    // メイン画面を戻す
+                    this.appContainer.classList.remove('background-pushed');
+                    this.resetPosition();
+
+                    if (this.closeTimer) clearTimeout(this.closeTimer);
+                    
+                    // アニメーション完了後に非表示
+                    this.closeTimer = setTimeout(() => {
+                        if (!this.el.classList.contains('active')) {
+                            this.el.style.display = 'none';
+                        }
+                        this.closeTimer = null;
+                    }, 500);
+                }
+            }
+
             // クエスト用 DOM要素
             const questView = $('#quest-view');
             const questPlanListEl = $('#quest-plan-list');
@@ -4377,166 +4537,6 @@
                     showToast(`ようこそ、${state.user.name}さん！`);
                 }
             });
-
-            // ==========================================
-            // ▼▼▼ 汎用サブページ管理クラス (これ1つで全ページ対応) ▼▼▼
-            // ==========================================
-            class SubPage {
-                constructor(elementId, options = {}) {
-                    this.el = document.getElementById(elementId);
-                    this.appContainer = document.getElementById('app-container');
-                    this.onOpen = options.onOpen || null;   // 開くときに実行する関数
-                    this.onClose = options.onClose || null; // 閉じるときに実行する関数
-                    
-                    this.closeTimer = null;
-
-                    // スワイプ制御用変数
-                    this.touchStartX = 0;
-                    this.touchStartY = 0;
-                    this.touchCurrentX = 0;
-                    this.isEdgeSwipe = false;
-                    this.swipeTouchId = null;
-
-                    // 初期化
-                    this.initEvents();
-                }
-
-                // イベントリスナーの設定
-                initEvents() {
-                    if (!this.el) return;
-
-                    // タッチ開始
-                    this.el.addEventListener('touchstart', (e) => {
-                        if (this.isEdgeSwipe) return;
-                        const touch = e.changedTouches[0];
-                        this.touchStartX = touch.clientX;
-                        this.touchStartY = touch.clientY;
-
-                        // 画面左端(50px以内)からの操作のみスワイプバックとみなす
-                        if (this.touchStartX < 50) {
-                            this.isEdgeSwipe = true;
-                            this.swipeTouchId = touch.identifier;
-                            this.el.classList.add('is-swiping');
-                            this.appContainer.style.transition = 'none';
-                        }
-                    }, { passive: true });
-
-                    // タッチ移動
-                    this.el.addEventListener('touchmove', (e) => {
-                        if (!this.isEdgeSwipe) return;
-                        
-                        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.swipeTouchId);
-                        if (!touch) return;
-
-                        this.touchCurrentX = touch.clientX;
-                        const currentY = touch.clientY;
-
-                        const diffX = this.touchCurrentX - this.touchStartX;
-                        const diffY = currentY - this.touchStartY;
-
-                        // ▼▼▼ 縦移動判定 (縦スクロール中はスワイプバックをキャンセル) ▼▼▼
-                        if (Math.abs(diffY) > Math.abs(diffX)) {
-                            this.resetSwipeState();
-                            return;
-                        }
-
-                        if (diffX > 0) {
-                            if (e.cancelable) e.preventDefault();
-                            
-                            // ページの移動
-                            this.el.style.transform = `translateX(${diffX}px)`;
-                            
-                            // 背景（メイン画面）のパララックス移動
-                            const screenWidth = window.innerWidth;
-                            const progress = Math.min(diffX / screenWidth, 1);
-                            const startX = -30;
-                            const currentMainX = startX + (Math.abs(startX) * progress);
-                            this.appContainer.style.transform = `translateX(${currentMainX}%)`;
-                        }
-                    }, { passive: false });
-
-                    // タッチ終了
-                    this.el.addEventListener('touchend', (e) => {
-                        if (!this.isEdgeSwipe) return;
-                        const touch = Array.from(e.changedTouches).find(t => t.identifier === this.swipeTouchId);
-                        if (!touch) return;
-
-                        this.el.classList.remove('is-swiping');
-                        this.appContainer.style.transition = '';
-
-                        const diff = this.touchCurrentX - this.touchStartX;
-                        const threshold = window.innerWidth / 3; // 画面の1/3以上動かしたら閉じる
-
-                        if (diff > threshold) {
-                            this.close(); // 閉じる
-                        } else {
-                            this.resetPosition(); // 元に戻す
-                        }
-                        
-                        this.isEdgeSwipe = false;
-                        this.swipeTouchId = null;
-                    });
-                }
-
-                // スワイプ中断時のリセット
-                resetSwipeState() {
-                    this.isEdgeSwipe = false;
-                    this.el.classList.remove('is-swiping');
-                    this.appContainer.style.transition = '';
-                    this.resetPosition();
-                }
-
-                // 位置を元に戻す（キャンセル時）
-                resetPosition() {
-                    this.el.style.transform = '';
-                    this.appContainer.style.transform = '';
-                    this.appContainer.style.filter = '';
-                }
-
-                // ページを開く
-                open() {
-                    if (this.closeTimer) {
-                        clearTimeout(this.closeTimer);
-                        this.closeTimer = null;
-                    }
-
-                    // 開く前の処理（データの描画など）
-                    if (this.onOpen) this.onOpen();
-
-                    // スタイルリセット
-                    this.resetPosition();
-                    
-                    // 表示＆アニメーション
-                    this.el.style.display = 'flex';
-                    void this.el.offsetWidth; // リフロー強制
-                    this.el.classList.add('active');
-                    
-                    // メイン画面を奥へ
-                    this.appContainer.classList.add('background-pushed');
-                }
-
-                // ページを閉じる
-                close() {
-                    this.el.classList.remove('active');
-                    
-                    // 閉じる前の処理
-                    if (this.onClose) this.onClose();
-
-                    // メイン画面を戻す
-                    this.appContainer.classList.remove('background-pushed');
-                    this.resetPosition();
-
-                    if (this.closeTimer) clearTimeout(this.closeTimer);
-                    
-                    // アニメーション完了後に非表示
-                    this.closeTimer = setTimeout(() => {
-                        if (!this.el.classList.contains('active')) {
-                            this.el.style.display = 'none';
-                        }
-                        this.closeTimer = null;
-                    }, 500);
-                }
-            }
 
             // ▼▼▼ 【追加】クエストページの定義（これが抜けていました） ▼▼▼
             const questPage = new SubPage('quest-view', {
