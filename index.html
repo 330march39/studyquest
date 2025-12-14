@@ -942,7 +942,7 @@
         </div>
     </div>
 
-    <div id="registration-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col p-6 hidden">
+    <div id="registration-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col p-6 transition-all duration-300 opacity-0 pointer-events-none transform scale-95">
         <header class="flex items-center mb-6">
             <button id="reg-back-btn" class="p-2 -ml-2"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
             <h2 class="text-xl font-bold ml-2">プロフィール設定</h2>
@@ -991,7 +991,7 @@
             
             <div class="flex-grow"></div>
 
-            <button id="reg-complete-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+            <button id="reg-complete-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 次へ進む
             </button>
         </div>
@@ -4650,8 +4650,18 @@
             
             // Welcome画面
             $('#btn-start-new').addEventListener('click', () => {
+                // Welcome画面を隠す
                 $('#welcome-screen').classList.add('hidden');
-                $('#registration-screen').classList.remove('hidden');
+                
+                // 入力フォームをリセット
+                $('#reg-name').value = '';
+                $('#reg-grade').value = '';
+                $('#reg-complete-btn').disabled = true; // ボタンを無効化
+
+                // 登録画面をアニメーション表示
+                const regScreen = $('#registration-screen');
+                regScreen.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+                regScreen.classList.add('opacity-100', 'pointer-events-auto', 'scale-100');
             });
             
             // ★修正: Welcome画面から「引き継ぐ」を押した時の挙動
@@ -4700,8 +4710,16 @@
             });
 
             $('#reg-back-btn').addEventListener('click', () => {
-                $('#registration-screen').classList.add('hidden');
-                $('#welcome-screen').classList.remove('hidden');
+                const regScreen = $('#registration-screen');
+                
+                // アニメーションで隠す
+                regScreen.classList.remove('opacity-100', 'pointer-events-auto', 'scale-100');
+                regScreen.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+
+                // アニメーション完了後にWelcome画面を表示
+                setTimeout(() => {
+                    $('#welcome-screen').classList.remove('hidden');
+                }, 300);
             });
 
             // チュートリアル
