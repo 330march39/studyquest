@@ -15,13 +15,8 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%; /* 100dvh から 100% に変更 */
-            position: fixed; /* ★追加: 画面位置を完全に固定 */
-            inset: 0;        /* ★追加: 上下左右0位置に固定 */
-            background-color: #ffffff;
-            overflow: hidden; 
-            overscroll-behavior-y: none;
-            z-index: 0; /*念のため */
+            height: 100%;
+            background-color: #ffffff; /* gray-100 (ライトモードの背景) */
         }
 
         /* 2. スプラッシュスクリーンの設定 */
@@ -195,18 +190,15 @@
         }
 
         #app-container {
-            position: absolute; /* ★追加 */
-            top: 0; left: 0; right: 0; bottom: 0; /* ★追加: 四隅に固定 */
-            width: 100%;
-            height: 100%; /* 画面いっぱいに広げる */
-            
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            /* ▼▼▼ 追加: アニメーション用設定 ▼▼▼ */
             transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
             will-change: transform;
             transform-origin: center left;
         }
+
         /* ▼▼▼ 追加: プロフィールが開いている時のメイン画面の状態 ▼▼▼ */
         #app-container.background-pushed {
             transform: translateX(-30%); /* 左に少しずれる */
@@ -507,34 +499,10 @@
             padding-bottom: env(safe-area-inset-bottom, 10px);
         }
         
+        /* ナビゲーションバー専用: コンテンツ領域の高さを維持しつつ、パディングで背景を伸ばす */
         .nav-safe {
-            /* パディングを含めたサイズ計算（重要） */
-            box-sizing: border-box; 
-            
-            /* 【修正 1】高さを「アイコンエリア(3.5rem) + 安全領域」に固定 */
-            /* フォールバック(予備値)を 20px から 0px に変更します */
-            height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
-            
-            /* 【修正 2】パディングも同様に修正 */
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-            
-            /* アイコン配置の設定 */
-            display: flex;
-            align-items: center; /* これにより、paddingを除いた「上の空間」の真ん中にアイコンが来ます */
-            
-            /* 配置と重なり順の強化 */
-            width: 100%;
-            z-index: 50; /* 念のためZインデックスを上げておきます */
-        }
-
-        /* 念のためアイコンの縮小防止もセットで記述 */
-        .tab-btn span {
-            font-size: 10px;
-            white-space: nowrap;
-            transform: scale(0.9);
-        }
-        .tab-btn i, .tab-btn svg {
-            flex-shrink: 0;
+            padding-bottom: env(safe-area-inset-bottom, 10px);
+            box-sizing: content-box; /* これが重要: height:64pxの中にパディングを含めない設定 */
         }
         
         /* 固定配置の要素を、セーフティエリア分だけ上に押し上げる */
@@ -674,28 +642,16 @@
             /* 下部の余白は維持 */
             padding-bottom: 0.75rem;
         }
-        /* Lucideアイコン(svg)と、読み込み前のタグ(i)にサイズを強制する */
-        .lucide, [data-lucide] {
-            min-width: 24px;
-            min-height: 24px;
-            display: block; /* インライン要素のままだと潰れることがあるため */
-        }
-        
-        /* タブバー内のアイコンは少し大きめにする */
-        .tab-btn .lucide, .tab-btn [data-lucide] {
-            width: 24px;
-            height: 24px;
-        }
     </style>
 </head>
-<body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden antialiased">
+<body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
     <div id="splash-screen" class="fixed inset-0 z-[300] flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-500">
         <img id="splash-logo-light" src="SQ_logo2.png" alt="StudyQuest Logo" class="w-64 h-64 mb-4 block dark:hidden">
         
         <img id="splash-logo-dark" src="SQ_logo3.png" alt="StudyQuest Logo Dark" class="w-64 h-64 mb-4 hidden dark:block">
     </div>
 
-    <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl bg-gray-100 dark:bg-gray-900 overflow-hidden">
+    <div id="app-container" class="h-full w-full flex flex-col max-w-lg mx-auto shadow-2xl bg-gray-100 dark:bg-gray-900">
         
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm">
             <h1 id="header-title" class="text-lg font-bold text-gray-900 dark:text-white">ホーム</h1>
@@ -706,7 +662,7 @@
             </button>
         </header>
 
-        <main class="min-h-0 flex-grow overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <main class="flex-grow overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
             <div id="home-page" class="page active p-4 space-y-6">
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
                     <p id="today-date" class="text-lg font-semibold text-gray-600 dark:text-gray-300"></p>
@@ -907,7 +863,7 @@
             </div>
         </div>
 
-        <nav class="nav-safe fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
+        <nav class="nav-safe fixed bottom-0 left-0 right-0 max-w-lg mx-auto h-14 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 flex justify-around items-center shadow-top z-20">
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text" data-page="home-page" data-title="ホーム"><i data-lucide="home" class="w-6 h-6"></i><span class="text-xs mt-1">ホーム</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="study-page" data-title="学習"><i data-lucide="book-marked" class="w-6 h-6"></i><span class="text-xs mt-1">学習</span></button>
             <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-500" data-page="focus-page" data-title="集中"><i data-lucide="timer" class="w-6 h-6"></i><span class="text-xs mt-1">集中</span></button>
@@ -4929,34 +4885,25 @@
 
                 checkUserRegistration();
                 
-                // 1回目：とりあえず生成（ここで失敗してもOK）
+                // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
                 lucide.createIcons();
-    
-                setTimeout(() => {
-                    // もし未登録なら、スプラッシュが消える直前に「ようこそ画面」を裏で表示状態にする
-                    if (!state.user.isRegistered) {
-                        $('#welcome-screen').classList.remove('hidden');
-                    }
-                
-                    const splash = document.getElementById('splash-screen');
-                    if (splash) {
-                        // フェードアウト開始
-                        splash.classList.add('opacity-0');
-                        
-                        // アニメーション完了後に非表示
-                        setTimeout(() => {
-                            splash.style.display = 'none';
+                    setTimeout(() => {
+                        // もし未登録なら、スプラッシュが消える直前に「ようこそ画面」を裏で表示状態にする
+                        if (!state.user.isRegistered) {
+                            $('#welcome-screen').classList.remove('hidden');
+                        }
+                    
+                        const splash = document.getElementById('splash-screen');
+                        if (splash) {
+                            // フェードアウト開始
+                            splash.classList.add('opacity-0');
                             
-                            // ★★★ 追加修正：画面が完全に見えた後に、ナビゲーションバーのアイコンを再確認する ★★★
-                            // iOSでは非表示中に描画がサボられることがあるため、ここで強制的に再生成します
-                            lucide.createIcons({
-                                root: document.querySelector('nav'), // ナビゲーションバーだけを対象にする
-                                attrs: { class: "w-6 h-6" }          // クラスも念のため再指定
-                            });
-                            
-                        }, 500);
-                    }
-                }, 1500); // 1.5秒待ってからフェードアウト開始
+                            // アニメーション完了後に非表示
+                            setTimeout(() => {
+                                splash.style.display = 'none';
+                            }, 500);
+                        }
+                    }, 1500); // 1.5秒待ってからフェードアウト開始
             };
 
             const purchaseItem = (id, type, cost) => {
