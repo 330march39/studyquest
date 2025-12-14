@@ -1212,6 +1212,25 @@
         </div>
     </div>
 
+    <div id="quiz-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-quiz-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            <h2 id="quiz-screen-title" class="text-lg font-bold text-gray-900 dark:text-white truncate max-w-[60%] text-center"></h2>
+            <div class="flex-1"></div>
+        </header>
+        <div class="flex-grow relative w-full h-full">
+             <div id="quiz-loader" class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div>
+             <iframe id="quiz-screen-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-forms allow-popups"></iframe>
+        </div>
+    </div>
+
     <!-- ===== モーダル ===== -->
     <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 flex-col hidden"><div class="w-full h-full max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 flex flex-col"><header class="p-3 flex items-center justify-between shadow-md bg-white dark:bg-gray-800"><h2 id="quiz-modal-title" class="truncate font-bold"></h2><button class="close-modal-btn p-1" data-modal="quiz-modal"><i data-lucide="x"></i></button></header><div class="flex-grow relative"><div class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div><iframe id="quiz-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-forms allow-popups"></iframe></div></div></div>
     <div id="assessment-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4">
@@ -2827,20 +2846,28 @@
                 const quizCard = e.target.closest('.quiz-card');
                 if (quizCard && !e.target.closest('.pin-btn')) {
                     const quiz = initialData.quizzes.find(q => q.id === quizCard.dataset.id);
-                    $('#quiz-modal-title').textContent = quiz.title;
                     
-                    // ★★★ ローダーを再表示する処理を追加 ★★★
-                    $('#loader').parentElement.style.display = 'flex'; 
-                
-                    $('#quiz-iframe').classList.add('invisible');
-                    $('#quiz-modal').dataset.currentQuiz = quiz.id;
-                    $('#quiz-modal').style.display = 'flex';
+                    // データをセット
+                    currentQuizId = quiz.id;
+                    $('#quiz-screen-title').textContent = quiz.title;
+                    
+                    // ローダーを表示してiframeを隠す
+                    $('#quiz-loader').style.display = 'flex';
+                    $('#quiz-screen-iframe').classList.add('invisible');
+                    
+                    // ★ページを開く
+                    quizPage.open();
+                    
+                    // タイマー開始
                     quizTimer.startTime = Date.now();
+                    
+                    // URL読み込み (少し遅延させてアニメーションをスムーズに)
                     setTimeout(() => {
-                        $('#quiz-iframe').src = quiz.url;
-                        $('#quiz-iframe').onload = () => {
-                            $('#loader').parentElement.style.display = 'none'; 
-                            $('#quiz-iframe').classList.remove('invisible');
+                        const iframe = $('#quiz-screen-iframe');
+                        iframe.src = quiz.url;
+                        iframe.onload = () => {
+                            $('#quiz-loader').style.display = 'none';
+                            iframe.classList.remove('invisible');
                         };
                     }, 100);
                 }
@@ -5121,6 +5148,37 @@
                     stopMusicPreview(); // 閉じるときに音楽を止める
                 }
             });
+
+            // ▼▼▼ 追加: クイズ画面の制御 ▼▼▼
+            let currentQuizId = null;
+
+            const quizPage = new SubPage('quiz-screen', {
+                onClose: () => {
+                    // 1. iframeをリセット（音の再生停止などのため）
+                    const iframe = $('#quiz-screen-iframe');
+                    iframe.src = 'about:blank';
+                    iframe.classList.add('invisible');
+                    
+                    // 2. クイズIDがある場合（学習後）は評価モーダルを開く
+                    if (currentQuizId) {
+                         $('#assessment-modal').dataset.quizId = currentQuizId;
+                         $('#assessment-modal').style.display = 'flex';
+                         
+                         // 3. 学習時間を記録
+                         if(quizTimer.startTime) {
+                            const elapsed = Math.round((Date.now() - quizTimer.startTime) / 1000);
+                            const title = $('#quiz-screen-title').textContent || 'クイズ';
+                            recordSession(title, elapsed);
+                            quizTimer.startTime = null; // リセット
+                            saveState();
+                        }
+                        currentQuizId = null; // IDリセット
+                    }
+                }
+            });
+
+            // 戻るボタンのイベント
+            $('#close-quiz-btn').addEventListener('click', () => quizPage.close());
 
             // 2. 詳細画面を開く関数
             const openItemDetailScreen = (id, type) => {
