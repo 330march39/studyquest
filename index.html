@@ -1231,6 +1231,46 @@
         </div>
     </div>
 
+    <div id="countdown-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900">
+        <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+            <div class="flex items-center flex-1">
+                <button id="close-countdown-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                    <div class="flex items-center font-medium primary-text">
+                        <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                        <span>戻る</span>
+                    </div>
+                </button>
+            </div>
+            <h2 id="countdown-screen-title" class="text-lg font-bold text-gray-900 dark:text-white">イベント設定</h2>
+            <div class="flex-1 text-right">
+                <button id="countdown-save-btn" class="primary-text font-bold text-sm px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">保存</button>
+            </div>
+        </header>
+
+        <div class="flex-grow overflow-y-auto p-4 pb-safe space-y-6">
+            <div class="bg-white dark:bg-gray-700 p-4 rounded-xl shadow-sm space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-1 text-gray-500 dark:text-gray-400">イベント名</label>
+                    <input id="countdown-name" type="text" placeholder="例: 期末テスト" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1 text-gray-500 dark:text-gray-400">日付</label>
+                    <input id="countdown-date" type="date" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-700 p-4 rounded-xl shadow-sm">
+                <label class="block text-sm font-bold mb-1 text-gray-500 dark:text-gray-400">メモ (詳細ページのみ表示)</label>
+                <textarea id="countdown-memo" rows="5" placeholder="範囲: P.30〜P.50\n目標: 80点以上" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+            </div>
+
+            <button id="countdown-delete-btn" class="w-full text-red-500 bg-white dark:bg-gray-700 border border-red-200 dark:border-red-900/30 p-3 rounded-xl font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center hidden">
+                <i data-lucide="trash-2" class="w-5 h-5 mr-2"></i>このイベントを削除
+            </button>
+            
+            <div class="h-20"></div> </div>
+    </div>
+
     <!-- ===== モーダル ===== -->
     <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 flex-col hidden"><div class="w-full h-full max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 flex flex-col"><header class="p-3 flex items-center justify-between shadow-md bg-white dark:bg-gray-800"><h2 id="quiz-modal-title" class="truncate font-bold"></h2><button class="close-modal-btn p-1" data-modal="quiz-modal"><i data-lucide="x"></i></button></header><div class="flex-grow relative"><div class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div><iframe id="quiz-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-forms allow-popups"></iframe></div></div></div>
     <div id="assessment-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4">
@@ -1305,9 +1345,7 @@
     
     </div>
 </div>
-    
-    <div id="countdown-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4"><div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6"><h2 id="countdown-modal-title" class="text-xl font-bold mb-4">カウントダウン設定</h2><div class="space-y-4"><input id="countdown-name" type="text" placeholder="イベント名 (例: 期末テスト)" class="w-full p-2 border rounded dark:bg-gray-800 dark:border-gray-600 appearance-none min-w-0"><input id="countdown-date" type="date" class="w-full block p-2 border rounded dark:bg-gray-800 dark:border-gray-600 appearance-none min-w-0"></div><div class="flex justify-between items-center mt-6"><button id="countdown-delete-btn" class="text-red-500 hover:text-red-700 font-semibold p-2 hidden"><i data-lucide="trash-2" class="w-5 h-5 inline-block mr-1"></i>削除</button><div class="flex space-x-2"><button id="countdown-cancel-btn" class="bg-gray-200 dark:bg-gray-600 px-6 py-2 rounded-lg">キャンセル</button><button id="countdown-save-btn" class="primary-bg primary-bg-hover text-white px-6 py-2 rounded-lg">保存</button></div></div></div></div>
-   
+       
     <div id="status-screen" class="screen-layer">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0">
             <div class="flex items-center flex-1">
@@ -2043,18 +2081,45 @@
                 pages: {
                     'home-page': () => {
                         const today = new Date();
-                        $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]}曜日)`;
+                        $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]})`;
 
+                        // --- ▼▼▼ ホーム画面リスト描画の修正 ▼▼▼ ---
                         const countdownContainer = $('#countdown-list');
-                        countdownContainer.innerHTML = state.countdowns.length ? state.countdowns.map(cd => {
-                            const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                            const targetStart = new Date(cd.date);
-                            targetStart.setHours(0,0,0,0);
-                            const diffTime = targetStart - todayStart;
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            const dayText = diffDays > 0 ? `あと <span class="text-2xl font-bold primary-text">${diffDays}</span> 日` : diffDays === 0 ? `<span class="text-xl font-bold text-red-500">今日です！</span>` : `<span class="text-gray-500">終了</span>`;
-                            return `<div class="bg-white dark:bg-gray-700 rounded-lg shadow-sm p-3 flex items-center justify-between"><div><h3 class="font-semibold text-gray-800 dark:text-gray-200">${cd.name}</h3><p class="text-sm text-gray-500 dark:text-gray-400">${cd.date.replace(/-/g, '/')}</p></div><div class="flex items-center"><div class="mr-4">${dayText}</div><button class="edit-countdown-btn p-2 text-gray-400 hover:text-gray-600" data-id="${cd.id}"><i data-lucide="edit" class="w-4 h-4"></i></button></div></div>`;
-                        }).join('') : `<p class="text-sm text-gray-500 text-center">右上の「+」ボタンでテストなどの日程を追加できます。</p>`;
+                        
+                        if (state.countdowns.length === 0) {
+                            countdownContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">右上の「+」ボタンでテストなどの日程を追加できます。</p>`;
+                        } else {
+                            countdownContainer.innerHTML = state.countdowns.map(cd => {
+                                const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                const targetStart = new Date(cd.date);
+                                targetStart.setHours(0,0,0,0);
+                                const diffTime = targetStart - todayStart;
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                const dayText = diffDays > 0 ? `あと <span class="text-2xl font-bold primary-text">${diffDays}</span> 日` : diffDays === 0 ? `<span class="text-xl font-bold text-red-500">今日です！</span>` : `<span class="text-gray-500">終了</span>`;
+                                
+                                // ★変更点: 全体を button タグにするか、onclick を設定する
+                                // ここでは div に countdown-card クラスを付け、親要素でイベント委任します
+                                return `
+                                    <div class="countdown-card bg-white dark:bg-gray-700 rounded-lg shadow-sm p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" data-id="${cd.id}">
+                                        <div>
+                                            <h3 class="font-bold text-gray-800 dark:text-gray-200 text-lg">${cd.name}</h3>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">${cd.date.replace(/-/g, '/')}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            ${dayText}
+                                        </div>
+                                        </div>
+                                `;
+                            }).join('');
+
+                            // ★重要: カードクリック時のイベントリスナーを追加（毎回再設定）
+                            countdownContainer.querySelectorAll('.countdown-card').forEach(card => {
+                                card.addEventListener('click', () => {
+                                    openCountdownScreen(card.dataset.id);
+                                });
+                            });
+                        }
+                        // --- ▲▲▲ 修正ここまで ▲▲▲ ---
                         
                         renderHomeTasks();
                     },
@@ -3476,80 +3541,109 @@
             });
 
             // --- Countdown Logic ---
-            function openCountdownModal(id = null) {
-                const modal = $('#countdown-modal');
-                modal.dataset.editingId = id || '';
-                const title = $('#countdown-modal-title');
-                const deleteBtn = $('#countdown-delete-btn');
+            // 1. サブページのインスタンス化
+            const countdownPage = new SubPage('countdown-screen');
+            let editingCountdownId = null; // 編集中のIDを保持
+
+            // 戻るボタン
+            $('#close-countdown-btn').addEventListener('click', () => countdownPage.close());
+
+            // 2. 画面を開く関数 (新規・編集共通)
+            function openCountdownScreen(id = null) {
+                editingCountdownId = id;
+                const titleEl = $('#countdown-screen-title');
                 const nameInput = $('#countdown-name');
                 const dateInput = $('#countdown-date');
-            
+                const memoInput = $('#countdown-memo'); // ★追加
+                const deleteBtn = $('#countdown-delete-btn');
+
                 if (id) {
-                    title.textContent = 'カウントダウンの編集';
+                    // 編集モード
+                    titleEl.textContent = 'イベントの編集';
                     deleteBtn.classList.remove('hidden');
-                    const countdown = state.countdowns.find(c => c.id === id);
-                    nameInput.value = countdown.name;
-                    dateInput.value = countdown.date;
                     
+                    const item = state.countdowns.find(c => c.id === id);
+                    if (item) {
+                        nameInput.value = item.name;
+                        dateInput.value = item.date;
+                        memoInput.value = item.memo || ''; // ★メモを読み込み (なければ空文字)
+                    }
                 } else {
-                    title.textContent = 'カウントダウンの追加';
+                    // 新規追加モード
+                    titleEl.textContent = 'イベントの追加';
                     deleteBtn.classList.add('hidden');
-                    nameInput.value = '';
                     
+                    nameInput.value = '';
+                    memoInput.value = ''; // ★メモをクリア
+                    
+                    // デフォルト日付: 2週間後
                     const defaultDate = new Date();
                     defaultDate.setDate(defaultDate.getDate() + 14);
-                    dateInput.value = defaultDate.toISOString().split('T')[0];
-
+                    // ローカル時間のYYYY-MM-DDを取得
+                    const y = defaultDate.getFullYear();
+                    const m = String(defaultDate.getMonth() + 1).padStart(2, '0');
+                    const d = String(defaultDate.getDate()).padStart(2, '0');
+                    dateInput.value = `${y}-${m}-${d}`;
                 }
 
-                modal.style.display = 'flex';
-                lucide.createIcons();
-
+                countdownPage.open();
             }
 
+            // 3. 保存処理
             function saveCountdown() {
-                const id = $('#countdown-modal').dataset.editingId;
                 const name = $('#countdown-name').value.trim();
                 const date = $('#countdown-date').value;
+                const memo = $('#countdown-memo').value; // ★メモを取得
 
                 if (!name || !date) {
                     showToast('イベント名と日付を入力してください');
                     return;
                 }
 
-                const countdownData = {
+                const newData = {
                     name,
                     date,
+                    memo // ★保存データに追加
                 };
 
-                if (id) {
-                    const index = state.countdowns.findIndex(c => c.id === id);
-                    state.countdowns[index] = { ...state.countdowns[index], ...countdownData };
+                if (editingCountdownId) {
+                    // 更新
+                    const index = state.countdowns.findIndex(c => c.id === editingCountdownId);
+                    if (index !== -1) {
+                        state.countdowns[index] = { ...state.countdowns[index], ...newData };
+                    }
                 } else {
-                    countdownData.id = `cd_${Date.now()}`;
-                    state.countdowns.push(countdownData);
+                    // 新規作成
+                    newData.id = `cd_${Date.now()}`;
+                    state.countdowns.push(newData);
                 }
 
+                // 日付順にソート
                 state.countdowns.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
                 saveState();
-                renderEngine.pages['home-page']();
-                lucide.createIcons();
-                $('#countdown-modal').style.display = 'none';
+                renderEngine.pages['home-page'](); // ホーム画面更新
+                countdownPage.close();
+                showToast('保存しました');
             }
-            
+
+            // 4. 削除処理
             function deleteCountdown() {
-                // 確認ダイアログを追加
-                if (!confirm('本当にこのカウントダウンを削除してもよろしいですか？')) {
-                    return; // キャンセルされたら、ここで処理を終了
+                if (!confirm('本当にこのイベントを削除しますか？')) return;
+
+                if (editingCountdownId) {
+                    state.countdowns = state.countdowns.filter(c => c.id !== editingCountdownId);
+                    saveState();
+                    renderEngine.pages['home-page']();
+                    countdownPage.close();
+                    showToast('削除しました');
                 }
-            
-                const id = $('#countdown-modal').dataset.editingId;
-                state.countdowns = state.countdowns.filter(c => c.id !== id);
-                saveState();
-                renderEngine.pages['home-page']();
-                lucide.createIcons();
-                $('#countdown-modal').style.display = 'none';
             }
+
+            // イベントリスナー設定
+            $('#add-countdown-btn').addEventListener('click', () => openCountdownScreen()); // 新規追加
+            $('#countdown-save-btn').addEventListener('click', saveCountdown);
+            $('#countdown-delete-btn').addEventListener('click', deleteCountdown);
 
             /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
 
