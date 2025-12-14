@@ -1934,11 +1934,11 @@
                 // --- ▲▲▲ 修正ここまで ▲▲▲ ---
 
                 // 3. ログインボーナス処理 (元のロジックをそのまま流用)
-                if(state.lastLogin !== new Date().toDateString()){
-                    addLP(10000, 'ログインボーナス', true);
-                    state.lastLogin = new Date().toDateString();
-                    saveState(); // stateが完全に構築された後に保存
-                }
+                if(state.user.isRegistered && state.lastLogin !== new Date().toDateString()){
+                    addLP(10000, 'ログインボーナス', true);
+                    state.lastLogin = new Date().toDateString();
+                    saveState();
+                }
 
                 // 4. 今日の予定リセット処理
                 const today = new Date().toDateString();
@@ -4184,6 +4184,12 @@
                 } else {
                     // 完了処理
                     state.user.isRegistered = true;
+
+                    // ▼▼▼ 追加: 初回スタート時にログインボーナスを付与してポップアップを表示 ▼▼▼
+                    addLP(10000, '初回ログインボーナス', true);
+                    state.lastLogin = new Date().toDateString();
+                    // ▲▲▲ 追加ここまで ▲▲▲
+
                     saveState();
                     
                     $('#tutorial-screen').classList.add('hidden');
