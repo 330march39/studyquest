@@ -773,6 +773,16 @@
         .date-pop-anim {
             animation: popDate 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
+        /* ▼▼▼ 追加: 画面切り替え時のフェードインアニメーション ▼▼▼ */
+        @keyframes viewFadeIn {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .view-fade-enter {
+            /* 0.3秒かけてフェードイン */
+            animation: viewFadeIn 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -3714,26 +3724,49 @@
                 lucide.createIcons();
             };
 
-            // ▼▼▼ 修正: グライダーアニメーション対応版 ▼▼▼
+            // ▼▼▼ 修正: 表示切り替え時にフェードアニメーションを適用 ▼▼▼
             const updateFocusModeUI = () => {
                 const mode = state.focus.mode;
                 const glider = $('#focus-mode-glider');
                 const timerBtn = $('.focus-mode-btn[data-mode="timer"]');
                 const stopwatchBtn = $('.focus-mode-btn[data-mode="stopwatch"]');
                 
-                // ビューの切り替え
-                $('#timer-view').style.display = (mode === 'timer') ? 'flex' : 'none';
-                $('#stopwatch-view').style.display = (mode === 'stopwatch') ? 'flex' : 'none';
+                const timerView = $('#timer-view');
+                const stopwatchView = $('#stopwatch-view');
 
-                // グライダーの移動と文字色の変更
+                // 1. グライダーの移動
                 if (mode === 'timer') {
                     glider.style.transform = 'translateX(0%)';
                     timerBtn.classList.add('active');
                     stopwatchBtn.classList.remove('active');
-                } else if (mode === 'stopwatch') {
+                } else {
                     glider.style.transform = 'translateX(100%)';
                     timerBtn.classList.remove('active');
                     stopwatchBtn.classList.add('active');
+                }
+
+                // 2. ビューの切り替えとアニメーション適用
+                // 現在非表示の方を表示するタイミングでアニメーションを発火させる
+                if (mode === 'timer') {
+                    if (timerView.style.display !== 'flex') {
+                        stopwatchView.style.display = 'none';
+                        timerView.style.display = 'flex';
+                        
+                        // アニメーションをリセットして再生
+                        timerView.classList.remove('view-fade-enter');
+                        void timerView.offsetWidth; // リフロー(再描画)を強制
+                        timerView.classList.add('view-fade-enter');
+                    }
+                } else if (mode === 'stopwatch') {
+                    if (stopwatchView.style.display !== 'flex') {
+                        timerView.style.display = 'none';
+                        stopwatchView.style.display = 'flex';
+                        
+                        // アニメーションをリセットして再生
+                        stopwatchView.classList.remove('view-fade-enter');
+                        void stopwatchView.offsetWidth; // リフロー(再描画)を強制
+                        stopwatchView.classList.add('view-fade-enter');
+                    }
                 }
             };
 
