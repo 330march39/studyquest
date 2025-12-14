@@ -1322,16 +1322,17 @@
 
     <!-- ===== モーダル ===== -->
     <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 flex-col hidden"><div class="w-full h-full max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 flex flex-col"><header class="p-3 flex items-center justify-between shadow-md bg-white dark:bg-gray-800"><h2 id="quiz-modal-title" class="truncate font-bold"></h2><button class="close-modal-btn p-1" data-modal="quiz-modal"><i data-lucide="x"></i></button></header><div class="flex-grow relative"><div class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div><iframe id="quiz-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-forms allow-popups"></iframe></div></div></div>
-    <div id="assessment-modal" class="fixed inset-0 bg-black/70 z-50 items-center justify-center hidden p-4">
-            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
-                <h2 class="text-xl font-bold mb-4">お疲れ様でした！</h2>
-                <p class="mb-6">このクイズの理解度を記録しよう</p>
-                <div class="flex justify-around">
-                    <button class="assessment-btn p-2 w-24 flex flex-col items-center" data-level="3"><i data-lucide="award" class="w-10 h-10 text-yellow-400 mb-1 mx-auto"></i><p>完 璧</p></button>
-                    <button class="assessment-btn p-2 w-24 flex flex-col items-center" data-level="2"><i data-lucide="thumbs-up" class="w-10 h-10 text-green-400 mb-1 mx-auto"></i><p>まあまあ</p></button>
-                    <button class="assessment-btn p-2 w-24 flex flex-col items-center" data-level="1"><i data-lucide="book-open-check" class="w-10 h-10 text-blue-400 mb-1 mx-auto"></i><p>要復習</p></button>
-                </div>
-            </div>    </div>
+    <div id="assessment-modal" class="hidden fixed inset-0 bg-black/70 z-[210] items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+        <div id="assessment-content" class="bg-white dark:bg-gray-700 rounded-lg shadow-xl w-full max-w-sm p-6 text-center transform scale-0 transition-transform duration-300">
+            <h2 class="text-xl font-bold mb-4">お疲れ様でした！</h2>
+            <p class="mb-6 text-gray-600 dark:text-gray-300">このクイズの理解度を記録しよう</p>
+            <div class="flex justify-around">
+                <button class="assessment-btn p-2 w-24 flex flex-col items-center hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition" data-level="3"><i data-lucide="award" class="w-10 h-10 text-yellow-400 mb-1 mx-auto"></i><p class="font-bold">完 璧</p></button>
+                <button class="assessment-btn p-2 w-24 flex flex-col items-center hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition" data-level="2"><i data-lucide="thumbs-up" class="w-10 h-10 text-green-400 mb-1 mx-auto"></i><p class="font-bold">まあまあ</p></button>
+                <button class="assessment-btn p-2 w-24 flex flex-col items-center hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition" data-level="1"><i data-lucide="book-open-check" class="w-10 h-10 text-blue-400 mb-1 mx-auto"></i><p class="font-bold">要復習</p></button>
+            </div>
+        </div>
+    </div>
     
     <div id="item-detail-screen" class="screen-layer bg-white dark:bg-gray-900 z-[150] flex flex-col">
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
@@ -1577,8 +1578,8 @@
         </div>
     </div>
     
-    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[210] flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm text-center">
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black/50 z-[210] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+        <div id="confirmation-content" class="bg-white dark:bg-gray-700 rounded-xl shadow-2xl p-6 w-full max-w-sm text-center transform scale-0 transition-transform duration-300">
             <h3 id="modal-title" class="text-lg font-bold text-gray-900 dark:text-white mb-4">クエストを終了しますか？</h3>
             <div class="flex justify-center space-x-4">
                 <button id="modal-cancel-btn" class="px-6 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold hover:bg-gray-300 dark:hover:bg-gray-500 transition">キャンセル</button>
@@ -2297,6 +2298,34 @@
             // カレンダー表示用の現在年月
             let currentCalendarDate = new Date();
             let selectedReportDate = new Date(); // 選択中の日付
+
+            // ▼▼▼ 追加: 汎用アニメーションモーダル制御関数 ▼▼▼
+            const openModalWithAnim = (modalId, contentId) => {
+                const modal = $(`#${modalId}`);
+                const content = $(`#${contentId}`);
+                
+                modal.classList.remove('hidden');
+                // 描画タイミングをずらしてCSS transitionを発火させる
+                requestAnimationFrame(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-0');
+                    content.classList.add('animate-pop-elastic'); // 弾むアニメーション
+                });
+            };
+
+            const closeModalWithAnim = (modalId, contentId) => {
+                const modal = $(`#${modalId}`);
+                const content = $(`#${contentId}`);
+                
+                modal.classList.add('opacity-0');
+                content.classList.remove('animate-pop-elastic');
+                content.classList.add('scale-0'); // 縮小アニメーション
+
+                // アニメーション完了(300ms)後に非表示
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            };
 
             const renderEngine = {
                 pages: {
@@ -3212,7 +3241,7 @@
                     lucide.createIcons();
 
                     // 4. モーダルを閉じる
-                    $('#assessment-modal').style.display = 'none';
+                    closeModalWithAnim('assessment-modal', 'assessment-content');
                 }
 
                 const themeBtn = e.target.closest('.theme-btn');
@@ -3630,12 +3659,12 @@
 
             // クエスト実行画面のボタン
             endQuestBtn.addEventListener('click', () => {
-                confirmationModal.style.display = 'flex';
+                openModalWithAnim('confirmation-modal', 'confirmation-content');
             });
 
             modalConfirmBtn.addEventListener('click', () => endQuest(false));
             modalCancelBtn.addEventListener('click', () => {
-                confirmationModal.style.display = 'none';
+                closeModalWithAnim('confirmation-modal', 'confirmation-content');
             });
 
            // 休憩中のコンテンツ (アイコンホーム画面)
@@ -4248,7 +4277,7 @@
             $('nav').style.display = 'flex';
 
             document.body.style.overflow = 'auto';
-            confirmationModal.style.display = 'none';
+            closeModalWithAnim('confirmation-modal', 'confirmation-content');
             closeIframe();
             if (completed) {
                 showToast('クエスト完了！お疲れ様でした！');
@@ -5332,7 +5361,7 @@
                     // 2. クイズIDがある場合（学習後）は評価モーダルを開く
                     if (currentQuizId) {
                          $('#assessment-modal').dataset.quizId = currentQuizId;
-                         $('#assessment-modal').style.display = 'flex';
+                         openModalWithAnim('assessment-modal', 'assessment-content');
                          
                          // 3. 学習時間を記録
                          if(quizTimer.startTime) {
