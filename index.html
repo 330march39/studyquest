@@ -634,6 +634,8 @@
 
         .animate-pop-elastic {
             animation: popInElastic 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            /* ▼▼▼ 追加: アニメーション中は競合を防ぐためにtransitionを切る ▼▼▼ */
+            transition: none !important;
         }
 
         .animate-coin-float {
