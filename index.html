@@ -695,6 +695,84 @@
             /* 下部の余白は維持 */
             padding-bottom: 0.75rem;
         }
+
+        /* 1. タイマー/ストップウォッチの切り替えグライダー */
+        .toggle-container {
+            position: relative;
+            background-color: #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.25rem; /* p-1 */
+            display: flex;
+            cursor: pointer;
+            z-index: 0;
+        }
+        .dark .toggle-container {
+            background-color: #374151; /* gray-700 */
+        }
+        
+        /* 動く背景 (グライダー) */
+        .toggle-glider {
+            position: absolute;
+            top: 0.25rem;
+            left: 0.25rem;
+            height: calc(100% - 0.5rem);
+            width: calc(50% - 0.25rem);
+            background-color: var(--primary-color); /* テーマカラー */
+            border-radius: 0.375rem; /* rounded-md */
+            z-index: 1;
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); /* スムーズな移動 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .focus-mode-btn {
+            position: relative;
+            z-index: 2; /* グライダーより上 */
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 600;
+            border-radius: 0.375rem;
+            transition: color 0.3s;
+            color: #6b7280; /* text-gray-500 (非選択時) */
+        }
+        .dark .focus-mode-btn {
+            color: #9ca3af; /* text-gray-400 */
+        }
+        
+        /* 選択中の文字色 */
+        .focus-mode-btn.active {
+            color: white !important;
+        }
+
+        /* 2. カレンダーのアニメーション */
+        
+        /* 月移動時のスライドアニメーション */
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .calendar-slide-next {
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+        .calendar-slide-prev {
+            animation: slideInLeft 0.3s ease-out forwards;
+        }
+
+        /* 日付選択時のポップアニメーション */
+        @keyframes popDate {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .date-pop-anim {
+            animation: popDate 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -767,9 +845,10 @@
                             <span>クエスト</span>
                         </button>
                         
-                        <div class="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
-                            <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="timer">タイマー</button>
-                            <button class="focus-mode-btn flex-1 p-2 rounded-md text-sm font-semibold" data-mode="stopwatch">ストップウォッチ</button>
+                        <div class="toggle-container" id="focus-mode-toggle">
+                            <div class="toggle-glider" id="focus-mode-glider"></div>
+                            <button class="focus-mode-btn active" data-mode="timer">タイマー</button>
+                            <button class="focus-mode-btn" data-mode="stopwatch">ストップウォッチ</button>
                         </div>
                     </div>
             
@@ -2634,13 +2713,22 @@
                         renderCalendar();
                         renderDailyDetails(selectedReportDate);
                         
-                        // カレンダーボタンのイベント設定（重複登録防止のため毎回クリアするか、onclickを使う）
+                        // ▼▼▼ 修正: カレンダー切り替えアニメーション ▼▼▼
                         $('#cal-prev-btn').onclick = () => {
                             currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+                            const grid = $('#calendar-grid');
+                            // アニメーションクラスを一旦リセットして適用
+                            grid.classList.remove('calendar-slide-next', 'calendar-slide-prev');
+                            void grid.offsetWidth; // リフロー強制
+                            grid.classList.add('calendar-slide-prev');
                             renderCalendar();
                         };
                         $('#cal-next-btn').onclick = () => {
                             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+                            const grid = $('#calendar-grid');
+                            grid.classList.remove('calendar-slide-next', 'calendar-slide-prev');
+                            void grid.offsetWidth; 
+                            grid.classList.add('calendar-slide-next');
                             renderCalendar();
                         };
                     },
@@ -2803,7 +2891,7 @@
                     let styleStr = ""; // ★追加: 動的なスタイルを格納する変数
                     
                     if (isSelected) {
-                        cellClass += "primary-bg text-white font-bold shadow-md";
+                        cellClass += "primary-bg text-white font-bold shadow-md date-pop-anim"; // ★ date-pop-anim を追加
                     } else if (isToday) {
                         cellClass += "border-2 font-bold";
                         styleStr = "border-color: var(--primary-color); color: var(--primary-color);";
@@ -3626,25 +3714,28 @@
                 lucide.createIcons();
             };
 
+            // ▼▼▼ 修正: グライダーアニメーション対応版 ▼▼▼
             const updateFocusModeUI = () => {
-                const mode = state.focus.mode;
-                
-                // メインビュー内の表示切替
-                $('#timer-view').style.display = (mode === 'timer') ? 'flex' : 'none';
-                $('#stopwatch-view').style.display = (mode === 'stopwatch') ? 'flex' : 'none';
-    
-                // ボタンのハイライト処理
-                const timerBtn = $('.focus-mode-btn[data-mode="timer"]');
-                const stopwatchBtn = $('.focus-mode-btn[data-mode="stopwatch"]');
-                
-                if (mode === 'timer') {
-                    timerBtn.classList.add('primary-bg', 'text-white');
-                    stopwatchBtn.classList.remove('primary-bg', 'text-white');
-                } else if (mode === 'stopwatch') {
-                    timerBtn.classList.remove('primary-bg', 'text-white');
-                    stopwatchBtn.classList.add('primary-bg', 'text-white');
-                }
-            };
+                const mode = state.focus.mode;
+                const glider = $('#focus-mode-glider');
+                const timerBtn = $('.focus-mode-btn[data-mode="timer"]');
+                const stopwatchBtn = $('.focus-mode-btn[data-mode="stopwatch"]');
+                
+                // ビューの切り替え
+                $('#timer-view').style.display = (mode === 'timer') ? 'flex' : 'none';
+                $('#stopwatch-view').style.display = (mode === 'stopwatch') ? 'flex' : 'none';
+
+                // グライダーの移動と文字色の変更
+                if (mode === 'timer') {
+                    glider.style.transform = 'translateX(0%)';
+                    timerBtn.classList.add('active');
+                    stopwatchBtn.classList.remove('active');
+                } else if (mode === 'stopwatch') {
+                    glider.style.transform = 'translateX(100%)';
+                    timerBtn.classList.remove('active');
+                    stopwatchBtn.classList.add('active');
+                }
+            };
 
             // ▼▼▼ 新規追加: 背景画像を focus-view-bg クラスを持つ要素（クエスト含む）に適用する関数 ▼▼▼
             const updateBackgrounds = () => {
