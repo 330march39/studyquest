@@ -654,6 +654,18 @@
             /* 下部の余白は維持 */
             padding-bottom: 0.75rem;
         }
+        /* Lucideアイコン(svg)と、読み込み前のタグ(i)にサイズを強制する */
+        .lucide, [data-lucide] {
+            min-width: 24px;
+            min-height: 24px;
+            display: block; /* インライン要素のままだと潰れることがあるため */
+        }
+        
+        /* タブバー内のアイコンは少し大きめにする */
+        .tab-btn .lucide, .tab-btn [data-lucide] {
+            width: 24px;
+            height: 24px;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden antialiased">
@@ -4897,25 +4909,34 @@
 
                 checkUserRegistration();
                 
-                // ▼▼▼ 変更（initの最後にlucideを1回実行） ▼▼▼
+                // 1回目：とりあえず生成（ここで失敗してもOK）
                 lucide.createIcons();
-                    setTimeout(() => {
-                        // もし未登録なら、スプラッシュが消える直前に「ようこそ画面」を裏で表示状態にする
-                        if (!state.user.isRegistered) {
-                            $('#welcome-screen').classList.remove('hidden');
-                        }
-                    
-                        const splash = document.getElementById('splash-screen');
-                        if (splash) {
-                            // フェードアウト開始
-                            splash.classList.add('opacity-0');
+    
+                setTimeout(() => {
+                    // もし未登録なら、スプラッシュが消える直前に「ようこそ画面」を裏で表示状態にする
+                    if (!state.user.isRegistered) {
+                        $('#welcome-screen').classList.remove('hidden');
+                    }
+                
+                    const splash = document.getElementById('splash-screen');
+                    if (splash) {
+                        // フェードアウト開始
+                        splash.classList.add('opacity-0');
+                        
+                        // アニメーション完了後に非表示
+                        setTimeout(() => {
+                            splash.style.display = 'none';
                             
-                            // アニメーション完了後に非表示
-                            setTimeout(() => {
-                                splash.style.display = 'none';
-                            }, 500);
-                        }
-                    }, 1500); // 1.5秒待ってからフェードアウト開始
+                            // ★★★ 追加修正：画面が完全に見えた後に、ナビゲーションバーのアイコンを再確認する ★★★
+                            // iOSでは非表示中に描画がサボられることがあるため、ここで強制的に再生成します
+                            lucide.createIcons({
+                                root: document.querySelector('nav'), // ナビゲーションバーだけを対象にする
+                                attrs: { class: "w-6 h-6" }          // クラスも念のため再指定
+                            });
+                            
+                        }, 500);
+                    }
+                }, 1500); // 1.5秒待ってからフェードアウト開始
             };
 
             const purchaseItem = (id, type, cost) => {
