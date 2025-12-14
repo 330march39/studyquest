@@ -494,6 +494,23 @@
             animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
+        /* ▼▼▼ 追加: 画面全体用の洗練された出現アニメーション ▼▼▼ */
+        @keyframes screenZoomFadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.92); /* 少し縮んだ状態から */
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);    /* 元のサイズへ */
+            }
+        }
+
+        .animate-screen-enter {
+            /* 画面全体用なので、少しゆっくりめで高級感を出す */
+            animation: screenZoomFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
         /* 新しく入ってくるページ */
         .page-enter {
             display: block !important;
@@ -1473,7 +1490,7 @@
     
     <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-all duration-300 z-[2000] transform -translate-y-10"></div>
         
-    <div id="quest-active-screen" class="focus-view-bg hidden fixed inset-0 bg-gray-900 text-gray-100 z-50 flex flex-col items-center justify-center transition-all duration-500 bg-cover bg-center">
+    <div id="quest-active-screen" class="focus-view-bg hidden fixed inset-0 bg-gray-900 text-gray-100 z-[200] flex flex-col items-center justify-center transition-all duration-500 bg-cover bg-center">
 
         <div class="absolute inset-0 bg-black/60 z-0"></div>
 
@@ -4165,26 +4182,35 @@
             // ▲▲▲ クエスト進行ロジック修正完了 ▲▲▲
 
         // クエストを開始する関数
+        // クエストを開始する関数（編集画面維持版）
         function startQuest() {
             if (quest.plan.length === 0) {
                 showToast('クエストの予定がありません。');
                 return;
             }
-            questPage.close();
+
+            // 1. 背景や変数の準備
             quest.active = true;
             quest.currentIndex = -1;
             updateBackgrounds();
-            questActiveScreen.classList.remove('animate-enter-active'); // 一度消して
-            void questActiveScreen.offsetWidth; // リフロー(再描画)を強制
-            questActiveScreen.classList.add('animate-enter-active');    // 再付与して再生
+
+            // 2. クエスト実行画面を表示（まだ透明・縮小状態）
+            // 最前面(z-200)に表示されるので、下の編集画面は見えなくなりますが、存在し続けます
             questActiveScreen.style.display = 'flex';
             
-            // アプリ2のヘッダーとタブバーを隠す
+            // アニメーションクラスをリセットして適用（ふわっと出る演出）
+            questActiveScreen.classList.remove('animate-screen-enter');
+            void questActiveScreen.offsetWidth; // リフロー強制
+            questActiveScreen.classList.add('animate-screen-enter');
+
+            // 3. アプリ2のヘッダー等を隠す
+            // (編集画面もヘッダーを隠しますが、念のためここでも隠しておきます)
             $('header').style.display = 'none';
             $('nav').style.display = 'none';
-            $('#mini-timer-container').classList.remove('visible'); // ミニタイマーも隠す
-
+            $('#mini-timer-container').classList.remove('visible');
             document.body.style.overflow = 'hidden';
+
+            // 4. 最初のステップを開始
             runNextQuestStep();
         };
 
