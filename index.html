@@ -3059,17 +3059,36 @@
             const playBGM = () => {
                 if (!state.settings.bgmEnabled || state.settings.playlist.length === 0) return;
                 
-                // プレイリストが空でなければ再生
                 if (bgmAudio.paused) {
                     const trackId = state.settings.playlist[currentTrackIndex];
                     const track = initialData.music[trackId];
                     if (track) {
-                        // ソースが設定されていなければ設定
                         if (!bgmAudio.src || !bgmAudio.src.includes(track.url)) {
                             bgmAudio.src = track.url;
                         }
+                        
+                        // ★追加: ロック画面等の表示を更新
+                        updateMediaSession(track.name);
+
                         bgmAudio.play().catch(e => console.log('再生エラー(ユーザー操作が必要かも):', e));
                     }
+                }
+            };
+
+            // ▼▼▼ 追加: 再生中の通知（ロック画面等）に情報を表示する関数 ▼▼▼
+            const updateMediaSession = (title) => {
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: title,
+                        artist: 'StudyQuest',
+                        artwork: [
+                            // アプリのロゴ画像を指定 (サイズは適宜調整されます)
+                            { src: 'SQ_logo.png', sizes: '96x96', type: 'image/png' },
+                            { src: 'SQ_logo.png', sizes: '128x128', type: 'image/png' },
+                            { src: 'SQ_logo.png', sizes: '192x192', type: 'image/png' },
+                            { src: 'SQ_logo.png', sizes: '512x512', type: 'image/png' },
+                        ]
+                    });
                 }
             };
 
@@ -6094,37 +6113,41 @@
         
         // BGM試聴の再生・停止制御
         const toggleMusicPreview = (url, btnElement) => {
-            // すでに再生中で、かつ同じURLなら「停止」とみなす
-            if (!previewAudio.paused && previewAudio.src === url) {
-                stopMusicPreview();
-                return;
-            }
-
-            // 別の曲を再生する場合、または新規再生の場合
-            // まず現在再生中のものを完全に停止・リセットする
-            stopMusicPreview();
-
-            // 新しく再生
-            previewAudio.src = url;
-            previewAudio.volume = 0.5;
-            
-            previewAudio.play().then(() => {
-                // ボタンのアイコンを「停止(square)」に変更
-                if (btnElement) {
-                    btnElement.innerHTML = '<i data-lucide="square" class="w-5 h-5 fill-current"></i>';
-                    btnElement.classList.add('playing-icon'); // アニメーション用クラス付与
-                    
-                    // アイコン再生成
-                    lucide.createIcons({ root: btnElement });
-                }
-                
-                // 30秒後に自動停止
-                previewTimeout = setTimeout(() => {
+                // すでに再生中で、かつ同じURLなら「停止」とみなす
+                if (!previewAudio.paused && previewAudio.src === url) {
                     stopMusicPreview();
-                }, 30000); 
+                    return;
+                }
 
-            }).catch(e => console.error("試聴エラー", e));
-        };
+                // 別の曲を再生する場合、または新規再生の場合
+                stopMusicPreview();
+
+                // 新しく再生
+                previewAudio.src = url;
+                previewAudio.volume = 0.5;
+                
+                // ★追加: URLから曲データを検索して名前を取得し、ロック画面等に表示
+                const trackEntry = Object.values(initialData.music).find(t => t.url === url);
+                const title = trackEntry ? trackEntry.name : '試聴';
+                updateMediaSession(title);
+                
+                previewAudio.play().then(() => {
+                    // ボタンのアイコンを「停止(square)」に変更
+                    if (btnElement) {
+                        btnElement.innerHTML = '<i data-lucide="square" class="w-5 h-5 fill-current"></i>';
+                        btnElement.classList.add('playing-icon'); // アニメーション用クラス付与
+                        
+                        // アイコン再生成
+                        lucide.createIcons({ root: btnElement });
+                    }
+                    
+                    // 30秒後に自動停止
+                    previewTimeout = setTimeout(() => {
+                        stopMusicPreview();
+                    }, 30000); 
+
+                }).catch(e => console.error("試聴エラー", e));
+            };
         
         // ▼▼▼ 修正: 試聴を停止し、ネイティブプレイヤーからも消去する ▼▼▼
             const stopMusicPreview = () => {
