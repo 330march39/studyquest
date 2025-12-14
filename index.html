@@ -4926,6 +4926,8 @@
                 showMigrationView('migration-step-1');
                 $('#migration-sender-error').classList.add('hidden');
                 $('#migration-target-id').value = "";
+
+                $('#migration-my-id').textContent = "...";
                 
                 if(peer) { peer.destroy(); peer = null; }
             }
