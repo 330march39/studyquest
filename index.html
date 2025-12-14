@@ -508,30 +508,33 @@
         }
         
         .nav-safe {
-            /* パディングを含めたサイズ計算にする */
+            /* パディングを含めたサイズ計算（重要） */
             box-sizing: border-box; 
             
-            /* 高さ = コンテンツ部分(3.5rem) + セーフエリア(下) */
-            /* これにより、アイコンエリア(3.5rem)が確保されます */
-            height: calc(3.5rem + env(safe-area-inset-bottom, 20px));
+            /* 【修正 1】高さを「アイコンエリア(3.5rem) + 安全領域」に固定 */
+            /* フォールバック(予備値)を 20px から 0px に変更します */
+            height: calc(3.5rem + env(safe-area-inset-bottom, 0px));
             
-            /* 下部にセーフエリア分の余白を作る */
-            padding-bottom: env(safe-area-inset-bottom, 20px);
+            /* 【修正 2】パディングも同様に修正 */
+            padding-bottom: env(safe-area-inset-bottom, 0px);
             
             /* アイコン配置の設定 */
             display: flex;
-            align-items: center; /* 縦方向は中央揃え（paddingを除いたエリア内で） */
+            align-items: center; /* これにより、paddingを除いた「上の空間」の真ん中にアイコンが来ます */
+            
+            /* 配置と重なり順の強化 */
+            width: 100%;
+            z-index: 50; /* 念のためZインデックスを上げておきます */
         }
-        
-        /* ついでに、5つのアイコンが並んでも崩れないように調整 */
+
+        /* 念のためアイコンの縮小防止もセットで記述 */
         .tab-btn span {
-            font-size: 10px; /* 文字サイズを少し小さくして収まりやすく */
-            white-space: nowrap; /* 折り返し禁止 */
-            transform: scale(0.9); /* 必要なら少し縮小 */
+            font-size: 10px;
+            white-space: nowrap;
+            transform: scale(0.9);
         }
-        
         .tab-btn i, .tab-btn svg {
-            flex-shrink: 0; /* アイコンが潰れるのを防ぐ */
+            flex-shrink: 0;
         }
         
         /* 固定配置の要素を、セーフティエリア分だけ上に押し上げる */
