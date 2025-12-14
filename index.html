@@ -591,23 +591,24 @@
             animation: coinFloat 3s ease-in-out infinite;
         }
 
-        /* 後光（サンバースト）エフェクト - 位置修正版 */
+        /* 後光（サンバースト）エフェクト - サイズ拡大・薄色化版 */
         .sunburst {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 600px;
-            height: 600px;
-            margin-left: -300px;
-            margin-top: -300px;
+            width: 1200px;
+            height: 1200px;
+            margin-left: -600px; /* widthの半分 */
+            margin-top: -600px;  /* heightの半分 */
+            
             background: repeating-conic-gradient(
                 from 0deg,
-                rgba(255, 215, 0, 0.2) 0deg 20deg,
+                rgba(255, 215, 0, 0.08) 0deg 20deg,
                 transparent 20deg 40deg
             );
             border-radius: 50%;
-            animation: sunburstRotate 20s linear infinite;
-            z-index: -1; /* ★重要: 親要素内での最背面へ */
+            animation: sunburstRotate 30s linear infinite; /* 少しゆっくり回すように変更(任意) */
+            z-index: -1;
             pointer-events: none;
         }
         
