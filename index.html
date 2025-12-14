@@ -3080,6 +3080,10 @@
             const stopBGM = () => {
                 bgmAudio.pause();
                 bgmAudio.currentTime = 0;
+                
+                // ネイティブの再生画面から消すための処理
+                bgmAudio.src = ""; 
+                bgmAudio.load(); // これを呼ぶことでブラウザに空の状態を認識させる
             };
 
             // 曲が終わったら次の曲へ
@@ -6122,9 +6126,15 @@
             }).catch(e => console.error("試聴エラー", e));
         };
         
-        const stopMusicPreview = () => {
+        // ▼▼▼ 修正: 試聴を停止し、ネイティブプレイヤーからも消去する ▼▼▼
+            const stopMusicPreview = () => {
                 previewAudio.pause();
                 previewAudio.currentTime = 0;
+
+                // ネイティブの再生画面から消すための処理
+                previewAudio.src = "";
+                previewAudio.load();
+
                 if (previewTimeout) clearTimeout(previewTimeout);
                 
                 // 1. プレイリスト内のボタン(.preview-bgm-btn)のリセット
@@ -6133,7 +6143,7 @@
                      btn.classList.remove('playing-icon');
                 });
                 
-                // 2. ▼▼▼ 詳細画面のボタンのリセット ▼▼▼
+                // 2. 詳細画面のボタンのリセット
                 const detailIcon = document.getElementById('detail-play-icon');
                 if (detailIcon) {
                     detailIcon.setAttribute('data-lucide', 'play');
@@ -6141,7 +6151,7 @@
                 }
                 
                 lucide.createIcons();
-            }; 
+            };
             
             init();
         });
