@@ -1501,9 +1501,6 @@
         <div class="relative z-10 w-full h-full flex flex-col items-center justify-center">
         
             <div class="absolute right-6 flex items-center space-x-2 z-50" style="top: calc(1.5rem + env(safe-area-inset-top));">
-                <button id="break-settings-btn" class="text-gray-400 p-2 rounded-full hover:bg-gray-700 transition-colors hidden">
-                    <i data-lucide="settings" class="w-7 h-7"></i>
-                </button>
                 <button id="end-quest-btn" class="text-gray-300 p-2 rounded-full hover:bg-gray-700 transition-colors">
                     <i data-lucide="x" class="w-7 h-7"></i> 
                 </button>
@@ -2548,7 +2545,7 @@
                         const settingsPage = $('#settings-page');
                         settingsPage.innerHTML = ''; // 一旦クリア
                     
-                        // --- 1. プロフィールカード ---
+                        // --- 1. プロフィールカード (一番上に表示) ---
                         const profileCard = document.createElement('div');
                         profileCard.className = 'bg-white dark:bg-gray-700 p-4 rounded-lg shadow mb-6 flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition';
                         profileCard.innerHTML = `
@@ -2564,11 +2561,20 @@
                         profileCard.addEventListener('click', () => { profilePage.open(); });
                         settingsPage.appendChild(profileCard);
                     
-                        // --- 2. 設定リスト ---
-                        const settingsList = document.createElement('div');
-                        settingsList.className = 'bg-white dark:bg-gray-700 rounded-lg shadow overflow-hidden';
-                    
-                        // リストアイテム生成用ヘルパー
+                        // --- ヘルパー関数 ---
+                        const createSectionTitle = (text) => {
+                            const h3 = document.createElement('h3');
+                            h3.className = 'text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 ml-1 mt-6';
+                            h3.textContent = text;
+                            return h3;
+                        };
+
+                        const createListContainer = () => {
+                            const div = document.createElement('div');
+                            div.className = 'bg-white dark:bg-gray-700 rounded-lg shadow overflow-hidden';
+                            return div;
+                        };
+
                         const createListItem = (icon, title, colorClass, onClick) => {
                             const item = document.createElement('div');
                             item.className = 'flex items-center p-4 border-b border-gray-100 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition last:border-0';
@@ -2583,66 +2589,51 @@
                             return item;
                         };
                     
-                        // テーマカラー設定
-                        settingsList.appendChild(createListItem('palette', 'テーマカラー', 'bg-blue-500', () => {
-                            themeSettingsPage.open();
-                        }));
+                        // --- 2. 「全般」グループ ---
+                        settingsPage.appendChild(createSectionTitle('全般'));
+                        const generalList = createListContainer();
                     
-                        // 壁紙設定
-                        settingsList.appendChild(createListItem('image', '壁紙設定', 'bg-purple-500', () => {
-                            backgroundSettingsPage.open();
-                        }));
-                    
-                        // BGM設定
-                        settingsList.appendChild(createListItem('music', 'BGM設定', 'bg-pink-500', () => {
-                            bgmSettingsPage.open();
-                        }));
-                    
-                        // 通知設定 (これは機能が単純なのでリスト内でトグルでも良いが、今回はクリックで許可ダイアログを出す形式を維持)
+                        // 通知設定 (未許可の場合のみ表示)
                         if (!('Notification' in window) || Notification.permission !== 'granted') {
-                            settingsList.appendChild(createListItem('bell', '通知を許可する', 'bg-yellow-500', async () => {
+                            generalList.appendChild(createListItem('bell', '通知を許可する', 'bg-yellow-500', async () => {
                                  if (!('Notification' in window)) { showToast('非対応です'); return; }
                                  const permission = await Notification.requestPermission();
                                  if (permission === 'granted') { 
                                      showToast('通知が許可されました！'); 
-                                     renderEngine.pages['settings-page'](); // 再描画して項目を消すか更新する
+                                     renderEngine.pages['settings-page'](); 
                                  }
                             }));
                         }
+
+                        // テーマカラー設定
+                        generalList.appendChild(createListItem('palette', 'テーマカラー', 'bg-blue-500', () => {
+                            themeSettingsPage.open();
+                        }));
                     
-                        settingsPage.appendChild(settingsList);
-                        lucide.createIcons();
+                        // 壁紙設定
+                        generalList.appendChild(createListItem('image', '壁紙設定', 'bg-purple-500', () => {
+                            backgroundSettingsPage.open();
+                        }));
 
-                        // 初回描画実行
-                        renderPlaylist();
-                        renderUnlockedList();
+                        settingsPage.appendChild(generalList);
 
-                        // 壁紙スイッチのイベントリスナー再設定 (innerHTML書き換えで消えるため)
-                        const bgScopeToggle = settingsPage.querySelector('#background-scope-toggle');
-                        if(bgScopeToggle) {
-                            bgScopeToggle.addEventListener('change', (e) => {
-                                state.settings.backgroundScopeGlobal = e.target.checked;
-                                saveState();
-                                updateAppearance();
-                            });
-                        }
+                        // --- 3. 「クエスト」グループ ---
+                        settingsPage.appendChild(createSectionTitle('クエスト'));
+                        const questList = createListContainer();
+                    
+                        // BGM設定
+                        questList.appendChild(createListItem('music', 'BGM設定', 'bg-pink-500', () => {
+                            bgmSettingsPage.open();
+                        }));
+
+                        // ★追加: ブレイクタイム設定
+                        questList.appendChild(createListItem('coffee', 'ブレイクタイム設定', 'bg-orange-500', () => {
+                            openBreakSettingsModal();
+                        }));
                         
-                        // 通知許可ボタンのイベント再設定
-                        const notifBtn = settingsPage.querySelector('#notification-permission-btn');
-                        if(notifBtn){
-                            notifBtn.addEventListener('click', async () => {
-                                if (!('Notification' in window)) { showToast('お使いのブラウザは通知に対応していません。'); return; }
-                                const permission = await Notification.requestPermission();
-                                if (permission === 'granted') { 
-                                    showToast('通知が許可されました！'); 
-                                    new Notification('StudyQuestへようこそ！', { body: '通知設定がオンになりました。' }); 
-                                    notifCard.style.display = 'none';
-                                } else { 
-                                    showToast('通知が拒否されました。'); 
-                                }
-                            });
-                        }
+                        settingsPage.appendChild(questList);
 
+                        // --- アイコン生成 ---
                         lucide.createIcons();
                     },
                 },
@@ -4077,7 +4068,6 @@
                 // 前の画面を隠す
                 questSectionView.style.display = 'none';
                 questBreakView.style.display = 'none';
-                $('#break-settings-btn').classList.add('hidden');
 
                 // トランジション画面を表示
                 questTransitionView.style.display = 'flex';
@@ -4136,7 +4126,6 @@
                     playBGM();
                     questSectionView.style.display = 'flex';
                     questBreakView.style.display = 'none';
-                    $('#break-settings-btn').classList.add('hidden');
                     
                     questSectionTitle.textContent = currentStep.text;
                     // 進捗表示
@@ -4184,7 +4173,6 @@
                     pauseBGM();
                     questSectionView.style.display = 'none';
                     questBreakView.style.display = 'flex';
-                    $('#break-settings-btn').classList.remove('hidden');
                     renderBreakIcons();
 
                     // ★ここでSWに「予約」を入れています
@@ -4257,7 +4245,6 @@
             state.savedQuest = null;
             saveState();
             stopBGM();
-            $('#break-settings-btn').classList.add('hidden');
             clearInterval(quest.timerInterval);
             quest.timerInterval = null; // 忘れずにクリア
 
@@ -5003,7 +4990,6 @@
                     playBGM();
                     questSectionView.style.display = 'flex';
                     questBreakView.style.display = 'none';
-                    $('#break-settings-btn').classList.add('hidden');
                     questSectionTitle.textContent = step.text;
                     const totalSections = quest.plan.filter(p => p.type === 'section').length;
                     const currentSectionNumber = quest.plan.slice(0, quest.currentIndex + 1).filter(p => p.type === 'section').length;
@@ -5034,7 +5020,6 @@
                     pauseBGM();
                     questSectionView.style.display = 'none';
                     questBreakView.style.display = 'flex';
-                    $('#break-settings-btn').classList.remove('hidden');
                     renderBreakIcons();
                     
                     startQuestTimer(
