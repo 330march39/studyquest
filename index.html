@@ -4672,17 +4672,63 @@
             // 1. プロフィール画面
             const profilePage = new SubPage('profile-screen', {
                 onOpen: () => {
-                    // プロフィール画面特有の描画処理をここに移動
+                    // プロフィール画面特有の描画処理
                     $('#edit-profile-icon').value = state.user.icon;
                     $('#edit-profile-name').value = state.user.name;
+                    
                     const gradeSelect = $('#edit-profile-grade');
+                    // 選択肢が空なら登録画面からコピーしてくる（未初期化対策）
                     if (gradeSelect.children.length <= 1) { 
-                        gradeSelect.innerHTML = $('#reg-grade').innerHTML;
+                        const originalOptions = document.getElementById('reg-grade').innerHTML;
+                        gradeSelect.innerHTML = originalOptions;
                     }
                     gradeSelect.value = state.user.grade;
                 }
             });
             $('#close-profile-btn').addEventListener('click', () => profilePage.close());
+
+            // アイコン変更ボタン（ランダム）
+            const editIconBtn = document.getElementById('edit-icon-random-btn');
+            if (editIconBtn) {
+                editIconBtn.addEventListener('click', () => {
+                    const emojis = ['🎓','✏️','🔥','🐱','🐶','🚀','⭐','🍎','⚽','🎵','🎨','💻'];
+                    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                    document.getElementById('edit-profile-icon').value = randomEmoji;
+                });
+            }
+
+            // 保存ボタン
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            if (saveProfileBtn) {
+                saveProfileBtn.addEventListener('click', () => {
+                    const nameInput = document.getElementById('edit-profile-name');
+                    const gradeInput = document.getElementById('edit-profile-grade');
+                    const iconInput = document.getElementById('edit-profile-icon');
+
+                    const newName = nameInput.value.trim();
+                    const newGrade = gradeInput.value;
+
+                    if (!newName || !newGrade) {
+                        showToast('ユーザー名と学年を入力してください');
+                        return;
+                    }
+
+                    // データを更新
+                    state.user.name = newName;
+                    state.user.grade = newGrade;
+                    state.user.icon = iconInput.value;
+                    saveState();
+
+                    // 設定画面（親画面）の表示を更新
+                    // ※renderEngineが定義済みであることを前提
+                    if (typeof renderEngine !== 'undefined' && renderEngine.pages['settings-page']) {
+                        renderEngine.pages['settings-page']();
+                    }
+
+                    showToast('プロフィールを保存しました');
+                    profilePage.close();
+                });
+            }
 
             // 2. ステータス画面
             const statusPage = new SubPage('status-screen', {
