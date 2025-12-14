@@ -1034,46 +1034,96 @@
         </div>
     </div>
 
-    <div id="migration-modal" class="fixed inset-0 z-[210] bg-black/90 text-white flex items-center justify-center p-4 hidden">
-        <div class="w-full max-w-md bg-gray-800 rounded-xl p-6 relative">
-            <button id="close-migration-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
+    <div id="migration-screen" class="fixed inset-0 z-[300] bg-gray-50 dark:bg-gray-900 flex flex-col transition-all duration-300 opacity-0 pointer-events-none transform scale-95">
+        <header class="header-safe px-6 py-4 flex items-center justify-between">
+            <button id="close-migration-btn" class="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400">
+                <span class="font-bold text-sm">キャンセル</span>
+            </button>
+            <div class="flex-1"></div>
+        </header>
+
+        <div class="flex-grow flex flex-col items-center justify-center p-6 max-w-md mx-auto w-full relative">
             
-            <h2 class="text-xl font-bold mb-4 flex items-center"><i data-lucide="smartphone" class="mr-2"></i> データ引き継ぎ</h2>
-            
-            <div id="migration-step-1" class="space-y-4">
-                <p class="text-sm text-gray-300">古いスマホと新しいスマホを用意してください。</p>
-                <div class="grid grid-cols-2 gap-4">
-                    <button id="migration-mode-send" class="p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex flex-col items-center">
-                        <i data-lucide="upload-cloud" class="w-8 h-8 mb-2 text-blue-400"></i>
-                        <span class="font-bold">送る</span>
-                        <span class="text-xs text-gray-400 mt-1">(古いスマホ)</span>
+            <div id="migration-step-1" class="w-full flex flex-col items-center space-y-8 animate-fadeIn">
+                <div class="text-center space-y-2">
+                    <div class="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400">
+                        <i data-lucide="smartphone" class="w-8 h-8"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">データ引継ぎ</h2>
+                    <p class="text-gray-500 dark:text-gray-400">古い端末と新しい端末を用意してください。</p>
+                </div>
+
+                <div class="w-full space-y-4">
+                    <button id="migration-mode-send" class="w-full bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border-2 border-transparent hover:border-indigo-500 dark:hover:border-indigo-500 transition-all group text-left relative overflow-hidden">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-500 mr-4 group-hover:scale-110 transition-transform">
+                                <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900 dark:text-white text-lg">データを送る</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">古いスマホ（引継ぎ元）</p>
+                            </div>
+                        </div>
                     </button>
-                    <button id="migration-mode-receive" class="p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition flex flex-col items-center">
-                        <i data-lucide="download-cloud" class="w-8 h-8 mb-2 text-green-400"></i>
-                        <span class="font-bold">受け取る</span>
-                        <span class="text-xs text-gray-400 mt-1">(新しいスマホ)</span>
+
+                    <button id="migration-mode-receive" class="w-full bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border-2 border-transparent hover:border-green-500 dark:hover:border-green-500 transition-all group text-left relative overflow-hidden">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-50 dark:bg-green-900/20 text-green-500 mr-4 group-hover:scale-110 transition-transform">
+                                <i data-lucide="download-cloud" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900 dark:text-white text-lg">データを受け取る</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">新しいスマホ（引継ぎ先）</p>
+                            </div>
+                        </div>
                     </button>
                 </div>
             </div>
 
-            <div id="migration-sender-view" class="hidden text-center space-y-4">
-                <p class="text-sm">新しいスマホで「受け取る」を選択し、<br>表示されるIDを入力してください。</p>
-                <div class="bg-black/50 p-4 rounded text-center">
-                    <p class="text-xs text-gray-400 mb-1">相手のIDを入力:</p>
-                    <input type="text" id="migration-target-id" class="bg-gray-700 text-white p-2 rounded w-full text-center font-mono text-lg tracking-widest uppercase" placeholder="相手のID">
+            <div id="migration-sender-view" class="hidden w-full flex flex-col items-center space-y-6 animate-fadeIn">
+                <div class="text-center">
+                    <h3 class="text-xl font-bold mb-2">接続先を入力</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">新しいスマホに表示されているIDを入力してください。</p>
                 </div>
-                <button id="migration-connect-btn" class="w-full primary-bg py-3 rounded-lg font-bold">データを送信</button>
-                <p id="migration-status-send" class="text-xs text-yellow-400 h-4"></p>
+
+                <div class="w-full bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm">
+                    <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Target ID</label>
+                    <input type="text" id="migration-target-id" class="w-full text-center text-3xl font-mono font-bold bg-gray-100 dark:bg-gray-900 border-b-2 border-gray-300 dark:border-gray-700 focus:border-indigo-500 focus:outline-none py-2 tracking-widest uppercase rounded-t-md transition-colors" placeholder="XXXX">
+                </div>
+
+                <button id="migration-connect-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+                    データを送信する
+                </button>
+
+                <p id="migration-status-send" class="text-sm font-medium text-indigo-500 h-6"></p>
+                
+                <button class="migration-back-step text-gray-400 hover:text-gray-600 text-sm mt-4">
+                    戻る
+                </button>
             </div>
 
-            <div id="migration-receiver-view" class="hidden text-center space-y-4">
-                <p class="text-sm">このIDを古いスマホに入力してください。</p>
-                <div class="bg-black/50 p-6 rounded text-center">
-                    <p class="text-5xl font-mono font-bold tracking-widest text-green-400" id="migration-my-id">...</p>
+            <div id="migration-receiver-view" class="hidden w-full flex flex-col items-center space-y-6 animate-fadeIn">
+                <div class="text-center">
+                    <h3 class="text-xl font-bold mb-2">待機中...</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">このIDを古いスマホに入力してください。</p>
                 </div>
-                <p class="text-xs text-gray-400 animate-pulse">接続待機中...</p>
-                <p id="migration-status-receive" class="text-xs text-yellow-400"></p>
+
+                <div class="relative w-full aspect-video bg-gray-800 rounded-2xl flex flex-col items-center justify-center shadow-inner overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 animate-pulse"></div>
+                    <p class="text-gray-400 text-xs font-mono mb-2 relative z-10">YOUR ID</p>
+                    <p class="text-5xl font-mono font-bold tracking-widest text-white relative z-10 drop-shadow-lg" id="migration-my-id">...</p>
+                </div>
+
+                <div class="flex items-center space-x-2 text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-full">
+                    <div class="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+                    <span class="text-xs font-bold" id="migration-status-receive">接続待ち</span>
+                </div>
+
+                <button class="migration-back-step text-gray-400 hover:text-gray-600 text-sm mt-4">
+                    戻る
+                </button>
             </div>
+
         </div>
     </div>
 
@@ -4783,45 +4833,70 @@
             $('#close-status-btn').addEventListener('click', () => statusPage.close());
 
             // ==========================================
-            // ▼▼▼ PeerJS データ移行ロジック ▼▼▼
+            // ▼▼▼ PeerJS データ移行ロジック (全画面版) ▼▼▼
             // ==========================================
             
             let peer = null;
             let conn = null;
 
-            // 【修正】引数 autoReceive を追加
+            // 全画面表示を開く
             function openMigrationModal(autoReceive = false) {
-                $('#migration-modal').classList.remove('hidden');
-                $('#migration-modal').style.display = 'flex';
+                const screen = $('#migration-screen');
                 
-                // 一度全てのビューを隠す
-                $('#migration-step-1').classList.add('hidden');
+                // 表示状態にする（アニメーション開始）
+                screen.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+                screen.classList.add('opacity-100', 'pointer-events-auto', 'scale-100');
+                
+                // ビューのリセット
+                $('#migration-step-1').classList.remove('hidden');
                 $('#migration-sender-view').classList.add('hidden');
                 $('#migration-receiver-view').classList.add('hidden');
-            
+                
+                // ステータステキストのリセット
+                $('#migration-status-send').textContent = "";
+                $('#migration-status-receive').textContent = "接続待ち";
+                $('#migration-target-id').value = "";
+
                 if (autoReceive) {
                     // ようこそ画面からの場合：いきなり「受け取る」モードにする
+                    $('#migration-step-1').classList.add('hidden');
                     $('#migration-receiver-view').classList.remove('hidden');
-                    initPeerReceiver(); // 受信待機を開始
-                } else {
-                    // 設定画面からの場合：選択肢を表示
-                    $('#migration-step-1').classList.remove('hidden');
+                    initPeerReceiver(); 
                 }
                 
                 lucide.createIcons();
             }
 
-            $('#close-migration-btn').addEventListener('click', () => {
-                $('#migration-modal').style.display = 'none';
+            // 全画面表示を閉じる
+            function closeMigrationModal() {
+                const screen = $('#migration-screen');
+                
+                // アニメーションで隠す
+                screen.classList.remove('opacity-100', 'pointer-events-auto', 'scale-100');
+                screen.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+
+                // 接続破棄
                 if(peer) { peer.destroy(); peer = null; }
+                if(conn) { conn.close(); conn = null; }
+            }
+
+            $('#close-migration-btn').addEventListener('click', closeMigrationModal);
+
+            // 「戻る」ボタン（ステップ内）
+            $$('.migration-back-step').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // 接続を切断して最初のステップへ
+                    if(peer) { peer.destroy(); peer = null; }
+                    $('#migration-step-1').classList.remove('hidden');
+                    $('#migration-sender-view').classList.add('hidden');
+                    $('#migration-receiver-view').classList.add('hidden');
+                });
             });
 
             // 送る側 (古いスマホ)
             $('#migration-mode-send').addEventListener('click', () => {
                 $('#migration-step-1').classList.add('hidden');
                 $('#migration-sender-view').classList.remove('hidden');
-                
-                // Peer初期化
                 initPeerSender();
             });
 
@@ -4829,23 +4904,21 @@
             $('#migration-mode-receive').addEventListener('click', () => {
                 $('#migration-step-1').classList.add('hidden');
                 $('#migration-receiver-view').classList.remove('hidden');
-                
-                // Peer初期化
                 initPeerReceiver();
             });
 
+            // --- 以下、PeerJSのロジックは既存のものを維持 ---
             function initPeerSender() {
-                // 送信側はID指定せずにPeer作成 (IDはなんでもいい)
+                // 送信側はID指定せずにPeer作成
                 peer = new Peer(); 
                 
                 peer.on('open', (id) => {
-                    // 送信側は自分のIDを表示する必要はないが、接続ボタン待機
-                    $('#migration-status-send').textContent = "準備完了。相手のIDを入力してください。";
+                    $('#migration-status-send').textContent = "";
                 });
                 
                 peer.on('error', (err) => {
                     console.error(err);
-                    $('#migration-status-send').textContent = "エラーが発生しました: " + err.type;
+                    $('#migration-status-send').textContent = "エラー: " + err.type;
                 });
             }
             
@@ -4858,25 +4931,23 @@
                 conn = peer.connect(targetId);
                 
                 conn.on('open', () => {
-                    const isConfirmed = confirm("【重要】\nデータを移行しますか？\n\n「OK」を押すとデータが送信され、この端末のデータは削除（ログアウト）されます。");
+                    // デザインに合わせたconfirmダイアログの使用を推奨しますが、ここでは標準confirmを使用
+                    const isConfirmed = confirm("【重要】\nデータを移行しますか？\n\n「OK」を押すとデータが送信され、この端末のデータはリセットされます。");
             
                     if (isConfirmed) {
-                        $('#migration-status-send').textContent = "接続成功！データを送信しています...";
+                        $('#migration-status-send').textContent = "送信中...";
                         
-                        // 全データを送信
                         const dataToSend = JSON.stringify(state);
                         conn.send(dataToSend);
                         
                         setTimeout(() => {
-                            alert('データの送信が完了しました。\nこの端末のデータはリセットされます。');
-                            // ログアウト処理 (ローカルデータ消去)
+                            alert('完了しました。アプリをリセットします。');
                             localStorage.removeItem('quizAppUltimateV8');
                             location.reload();
-                        }, 1000);
+                        }, 1500);
                     } else {
-                        // キャンセルした場合
-                        $('#migration-status-send').textContent = "キャンセルされました。";
-                        conn.close(); // 接続を切る
+                        $('#migration-status-send').textContent = "キャンセルされました";
+                        conn.close();
                     }
                 });
                 
@@ -4886,43 +4957,37 @@
             });
 
             function initPeerReceiver() {
-                // IDを生成 (ランダムな4桁の英数字などで簡易化)
-                // PeerJS Serverのデフォルトを使う場合、ID重複の可能性があるので少し長めに
+                // 受信側ID生成 (4桁英数)
                 const myPeerId = Math.random().toString(36).substring(2, 6).toUpperCase(); 
                 
                 peer = new Peer(myPeerId);
                 
                 peer.on('open', (id) => {
                     $('#migration-my-id').textContent = id;
-                    $('#migration-status-receive').textContent = "このIDを古いスマホに入力してください";
+                    $('#migration-status-receive').textContent = "接続待機中...";
                 });
                 
                 peer.on('connection', (c) => {
-                    // 相手から接続された
-                    $('#migration-status-receive').textContent = "接続されました！データ受信中...";
+                    $('#migration-status-receive').textContent = "データ受信中...";
                     
                     c.on('data', (data) => {
-                        console.log('Received', data);
                         try {
-                            // 受信データの検証（簡易）
                             const receivedState = JSON.parse(data);
                             if(receivedState.profile && receivedState.user) {
-                                // 保存してリロード
                                 localStorage.setItem('quizAppUltimateV8', data);
-                                alert('データの引き継ぎが完了しました！\nアプリを再起動します。');
+                                alert('引継ぎ完了！\nアプリを再起動します。');
                                 location.reload();
                             }
                         } catch(e) {
                             console.error(e);
-                            alert('データの破損などのエラーが発生しました');
+                            alert('データ破損エラー');
                         }
                     });
                 });
                 
                 peer.on('error', (err) => {
-                     // IDが被った場合などはリトライが必要
                      if(err.type === 'unavailable-id') {
-                         initPeerReceiver(); // ID変えてリトライ
+                         initPeerReceiver(); // リトライ
                      } else {
                          $('#migration-status-receive').textContent = "エラー: " + err.type;
                      }
