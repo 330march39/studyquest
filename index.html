@@ -1278,10 +1278,9 @@
             <h2 id="quiz-screen-title" class="text-lg font-bold text-gray-900 dark:text-white truncate max-w-[60%] text-center"></h2>
             <div class="flex-1"></div>
         </header>
-        <div class="flex-grow relative w-full h-full">
-             <div id="quiz-loader" class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div>
-             <iframe id="quiz-screen-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-forms allow-popups"></iframe>
-        </div>
+        <div id="quiz-container" class="flex-grow relative w-full h-full">
+         <div id="quiz-loader" class="absolute inset-0 flex items-center justify-center" style="display: none;"><div id="loader"></div></div>
+         </div>
     </div>
 
     <div id="countdown-screen" class="screen-layer flex flex-col h-full bg-gray-100 dark:bg-gray-900">
@@ -1574,11 +1573,10 @@
             </button>
         </div>
         
-        <div class="relative flex-grow w-full h-full bg-white">
-            <div id="iframe-loader" class="flex flex-col items-center justify-center">
+        <div id="game-container" class="relative flex-grow w-full h-full bg-white">
+            <div id="iframe-loader" class="flex flex-col items-center justify-center absolute inset-0" style="display: none;">
                 <div id="loader"></div> <p class="mt-4 text-gray-500 font-bold">Loading...</p>
             </div>
-            <iframe id="break-iframe" class="w-full h-full absolute inset-0 opacity-0 transition-opacity duration-300" src="about:blank"></iframe>
         </div>
     </div>
     
@@ -3181,14 +3179,22 @@
                     quizTimer.startTime = Date.now();
                     
                     // URL読み込み (少し遅延させてアニメーションをスムーズに)
-                    setTimeout(() => {
-                        const iframe = $('#quiz-screen-iframe');
-                        iframe.src = quiz.url;
-                        iframe.onload = () => {
-                            $('#quiz-loader').style.display = 'none';
-                            iframe.classList.remove('invisible');
-                        };
-                    }, 100);
+                    const container = $('#quiz-container');
+                    const loader = $('#quiz-loader');
+                    loader.style.display = 'flex'; // ローダー表示
+
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'quiz-screen-iframe';
+                    iframe.className = 'w-full h-full border-0 invisible'; // 最初は隠す
+                    iframe.sandbox = 'allow-scripts allow-forms allow-popups';
+                    iframe.src = quiz.url;
+
+                    iframe.onload = () => {
+                        loader.style.display = 'none';
+                        iframe.classList.remove('invisible');
+                    };
+
+                    container.appendChild(iframe);
                 }
                 const pinBtn = e.target.closest('.pin-btn');
                 if(pinBtn) {
@@ -4289,40 +4295,45 @@
         };
 
         // 休憩用iframeを開く関数（ローディング制御付き）
-        function openIframe(url) {
-            const iframe = $('#break-iframe');
-            const overlay = $('#iframe-overlay');
-            const loader = $('#iframe-loader');
-        
-            // 初期状態：iframeを透明にし、ローダーを表示
-            iframe.classList.remove('opacity-100');
-            iframe.classList.add('opacity-0');
-            loader.style.display = 'flex';
-            
-            overlay.style.display = 'flex'; // オーバーレイ表示
-        
-            // URLセット
-            iframe.src = url;
-        
-            // 読み込み完了時のイベント
-            iframe.onload = () => {
-                loader.style.display = 'none'; // ローダーを隠す
-                iframe.classList.remove('opacity-0');
-                iframe.classList.add('opacity-100'); // フェードイン
+            function openIframe(url) {
+                const container = $('#game-container');
+                const overlay = $('#iframe-overlay');
+                const loader = $('#iframe-loader');
+                
+                overlay.style.display = 'flex';
+                loader.style.display = 'flex';
+
+                // iframeを作成
+                const iframe = document.createElement('iframe');
+                iframe.id = 'break-iframe'; // IDは維持
+                iframe.className = 'w-full h-full absolute inset-0 opacity-0 transition-opacity duration-300';
+                iframe.sandbox = 'allow-scripts allow-forms allow-popups';
+                iframe.style.border = '0';
+                iframe.src = url;
+
+                // 読み込み完了時の処理
+                iframe.onload = () => {
+                    loader.style.display = 'none';
+                    iframe.classList.remove('opacity-0');
+                    iframe.classList.add('opacity-100');
+                };
+
+                container.appendChild(iframe); // コンテナに追加
+                lucide.createIcons();
             };
-            
-            lucide.createIcons();
-        };
         
-        function closeIframe() {
-            const iframe = $('#break-iframe');
-            const overlay = $('#iframe-overlay');
-            
-            iframe.src = 'about:blank';
-            iframe.classList.remove('opacity-100');
-            iframe.classList.add('opacity-0');
-            overlay.style.display = 'none';
-        };
+            function closeIframe() {
+                const container = $('#game-container');
+                const iframe = document.getElementById('break-iframe');
+                const overlay = $('#iframe-overlay');
+                
+                // iframeが存在すれば削除（これで前回の画面は消滅する）
+                if (iframe) {
+                    iframe.remove();
+                }
+                
+                overlay.style.display = 'none';
+            };
             
         // ★修正後★ 休憩アイコンをレンダリングする関数
         function renderBreakIcons() {
@@ -5355,31 +5366,36 @@
             // ▼▼▼ 追加: クイズ画面の制御 ▼▼▼
             let currentQuizId = null;
 
+            // ▼▼▼ 修正: クイズ画面もiframeを動的生成・削除する ▼▼▼
             const quizPage = new SubPage('quiz-screen', {
                 onClose: () => {
-                    // 1. iframeをリセット（音の再生停止などのため）
-                    const iframe = $('#quiz-screen-iframe');
-                    iframe.src = 'about:blank';
-                    iframe.classList.add('invisible');
+                    // 1. iframeを削除
+                    const container = $('#quiz-container');
+                    const iframe = document.getElementById('quiz-screen-iframe');
+                    if (iframe) {
+                        iframe.remove();
+                    }
                     
-                    // 2. クイズIDがある場合（学習後）は評価モーダルを開く
+                    // ローダーを非表示にリセット
+                    $('#quiz-loader').style.display = 'none';
+
+                    // 2. 評価モーダル等の処理 (既存コード維持)
                     if (currentQuizId) {
                          $('#assessment-modal').dataset.quizId = currentQuizId;
                          openModalWithAnim('assessment-modal', 'assessment-content');
                          
-                         // 3. 学習時間を記録
                          if(quizTimer.startTime) {
                             const elapsed = Math.round((Date.now() - quizTimer.startTime) / 1000);
                             const title = $('#quiz-screen-title').textContent || 'クイズ';
                             recordSession(title, elapsed);
-                            quizTimer.startTime = null; // リセット
+                            quizTimer.startTime = null;
                             saveState();
                         }
-                        currentQuizId = null; // IDリセット
+                        currentQuizId = null;
                     }
                 }
             });
-
+            
             // 戻るボタンのイベント
             $('#close-quiz-btn').addEventListener('click', () => quizPage.close());
 
