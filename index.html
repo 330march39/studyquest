@@ -4968,14 +4968,15 @@
                     }, 1500); // 1.5秒待ってからフェードアウト開始
             };
 
-            const purchaseItem = (id, type, cost) => {
+            // ▼▼▼ 修正: 第4引数に onSuccess (成功時の処理) を追加 ▼▼▼
+            const purchaseItem = (id, type, cost, onSuccess) => {
                 if (state.profile.lp < cost) {
                     showToast('LPが足りません');
                     return;
                 }
                 state.profile.lp -= cost;
                 
-                let itemData = null; // アイテムデータを取得するために変数を定義
+                let itemData = null;
 
                 if (type === 'theme') {
                     state.profile.unlockedThemes.push(id);
@@ -5001,10 +5002,13 @@
 
                 renderStatusPageContent();
                 
-                // ▼▼▼ 修正: トーストではなくポップアップを表示 ▼▼▼
-                // showToast('交換しました！'); 
                 if (itemData) {
                     showItemPopup(itemData, type);
+                }
+
+                // ▼▼▼ 追加: 購入成功時に、渡された関数を実行する ▼▼▼
+                if (onSuccess) {
+                    onSuccess();
                 }
             };
 
@@ -5120,41 +5124,32 @@
 
             // 2. 詳細画面を開く関数
             const openItemDetailScreen = (id, type) => {
+                // --- 基本データの取得と表示 ---
                 const screen = $('#item-detail-screen');
-                let itemData, isUnlocked, isActive;
+                let itemData;
                 let categoryName = '';
 
-                // データ取得と状態判定
                 if (type === 'theme') {
                     itemData = initialData.themes[id];
-                    isUnlocked = state.profile.unlockedThemes.includes(id);
-                    isActive = state.profile.activeTheme === id;
                     categoryName = 'テーマカラー';
                 } else if (type === 'background') {
                     itemData = initialData.backgrounds[id];
-                    isUnlocked = state.profile.unlockedBackgrounds.includes(id);
-                    isActive = state.profile.activeBackground === id;
                     categoryName = '壁紙';
                 } else if (type === 'game') {
                     itemData = initialData.games[id];
-                    isUnlocked = state.profile.unlockedGames.includes(id);
-                    isActive = false;
                     categoryName = 'ミニゲーム';
                 } else if (type === 'music') {
                     itemData = initialData.music[id];
-                    isUnlocked = state.profile.unlockedMusic.includes(id);
-                    isActive = false;
                     categoryName = 'BGM';
                 }
 
-                // UIへの流し込み
                 $('#detail-title').textContent = itemData.name;
                 $('#detail-subtitle').textContent = categoryName;
                 
+                // アイコンコンテナの初期化と描画 (変更なし)
                 const iconContainer = $('#detail-icon-container');
                 iconContainer.innerHTML = '';
                 
-                // アイコン/プレビューの描画
                 if (type === 'theme') {
                     iconContainer.style.backgroundColor = itemData.color;
                     iconContainer.className = "w-32 h-32 rounded-full shadow-lg border-4 border-white dark:border-gray-700 mx-auto";
@@ -5163,16 +5158,13 @@
                     const bgStyle = itemData.url ? `background-image: url(${itemData.url}); background-size: cover; background-position: center;` : 'background-color: #6b7280;';
                     iconContainer.innerHTML = `<div class="w-full h-full" style="${bgStyle}"></div>`;
                 } else {
-                    // ゲームと音楽
                     iconContainer.style.backgroundColor = ''; 
                     iconContainer.className = "w-32 h-32 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800 relative mx-auto"; 
                     
                     const iconName = itemData.icon || (type === 'music' ? 'music' : 'gamepad-2');
                     const iconColor = type === 'game' ? 'text-indigo-500' : 'text-pink-500';
-                    
                     let innerContent = `<i data-lucide="${iconName}" class="w-16 h-16 ${iconColor}"></i>`;
 
-                    // 音楽の場合は試聴ボタンを重ねる
                     if (type === 'music') {
                         innerContent += `
                             <button id="detail-music-play-btn" class="absolute inset-0 flex items-center justify-center bg-black/5 hover:bg-black/20 transition-colors z-10 group">
@@ -5184,7 +5176,6 @@
                     }
                     iconContainer.innerHTML = innerContent;
 
-                    // 音楽試聴イベント設定
                     if (type === 'music') {
                         setTimeout(() => {
                             const playBtn = $('#detail-music-play-btn');
@@ -5195,15 +5186,13 @@
                                     if (!previewAudio.paused && previewAudio.src === itemData.url) {
                                         stopMusicPreview();
                                     } else {
-                                        stopMusicPreview(); // 他を止める
+                                        stopMusicPreview();
                                         previewAudio.src = itemData.url;
                                         previewAudio.volume = 0.5;
                                         previewAudio.play();
-                                        
                                         playIcon.setAttribute('data-lucide', 'square');
                                         playIcon.classList.remove('ml-0.5');
                                         lucide.createIcons();
-                                        
                                         previewTimeout = setTimeout(stopMusicPreview, 30000);
                                     }
                                 };
@@ -5212,79 +5201,97 @@
                     }
                 }
 
-                // --- アクションボタンの設定 ---
-                const actionBtn = $('#detail-action-btn');
-                const statusText = $('#detail-status-text');
-                
-                const newBtn = actionBtn.cloneNode(true);
-                actionBtn.parentNode.replaceChild(newBtn, actionBtn);
-
-                statusText.classList.add('hidden');
-                newBtn.className = "font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 flex items-center min-w-[140px] justify-center text-lg";
-
-                if (!isUnlocked) {
-                    // 未購入
-                    newBtn.innerHTML = `<span class="mr-1">${itemData.cost}</span> <span class="text-sm">LP で交換</span>`;
-                    
-                    if (state.profile.lp >= itemData.cost) {
-                        newBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                        newBtn.classList.add('primary-bg', 'text-white');
-                        newBtn.onclick = () => {
-                            if(confirm(`「${itemData.name}」を ${itemData.cost} LPで交換しますか？`)){
-                                purchaseItem(id, type, itemData.cost);
-                            }
-                        };
-                    } else {
-                        newBtn.classList.remove('primary-bg', 'text-white');
-                        newBtn.classList.add('bg-gray-400', 'text-gray-100', 'cursor-not-allowed');
-                        newBtn.onclick = () => showToast('LPが足りません');
-                    }
-                } else {
-                    // 購入済み
-                    if (type === 'theme' || type === 'background') {
-                        if (isActive) {
-                            newBtn.innerHTML = `<span>適用中</span>`;
-                            newBtn.className = "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-8 rounded-full shadow-none cursor-default min-w-[140px]";
-                            newBtn.onclick = null;
-                        } else {
-                            newBtn.innerHTML = `<span>適用する</span>`;
-                            newBtn.className = "primary-bg text-white font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 cursor-pointer min-w-[140px]";
-                            newBtn.onclick = () => applyItem(id, type);
-                        }
-                    } else {
-                        newBtn.innerHTML = `<span>解放済み</span>`;
-                        newBtn.className = "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-8 rounded-full shadow-none cursor-default min-w-[140px]";
-                        newBtn.onclick = null;
-                    }
-                    statusText.classList.remove('hidden');
-                }
-
-                // プレビューエリア（ゲーム用）
+                // プレビューエリア（ゲーム用・変更なし）
                 const previewSection = $('#detail-preview-section');
                 const carousel = $('#detail-carousel');
                 
                 if (type === 'game' && itemData.previews && itemData.previews.length > 0) {
                     previewSection.classList.remove('hidden');
-                    carousel.innerHTML = '';
-                    itemData.previews.forEach(url => {
-                        const item = document.createElement('div');
-                        item.className = 'preview-item flex-shrink-0 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 snap-center h-full';
-                        if (url.endsWith('.mp4')) {
-                            item.innerHTML = `<video src="${url}" controls class="w-full h-full object-contain"></video>`;
-                        } else {
-                            item.innerHTML = `<img src="${url}" class="w-full h-full object-cover">`;
-                        }
-                        carousel.appendChild(item);
-                    });
-                    carousel.style.display = 'flex';
-                    carousel.style.overflowX = 'auto';
+                    renderGamePreviews(itemData); // 既存の関数を使用
                 } else {
                     previewSection.classList.add('hidden');
                 }
 
-                lucide.createIcons();
+                // --- ▼▼▼ ここからアクションボタンのロジック変更 ▼▼▼ ---
+                
+                // ボタン描画ロジックを関数化
+                const renderActionButton = () => {
+                    const actionBtn = $('#detail-action-btn');
+                    const statusText = $('#detail-status-text');
+                    
+                    // 最新の状態をstateから再取得する (ここが重要)
+                    let isUnlocked = false;
+                    let isActive = false;
 
-                // ★重要: SubPageクラスの open メソッドを呼ぶ
+                    if (type === 'theme') {
+                        isUnlocked = state.profile.unlockedThemes.includes(id);
+                        isActive = state.profile.activeTheme === id;
+                    } else if (type === 'background') {
+                        isUnlocked = state.profile.unlockedBackgrounds.includes(id);
+                        isActive = state.profile.activeBackground === id;
+                    } else if (type === 'game') {
+                        isUnlocked = state.profile.unlockedGames.includes(id);
+                    } else if (type === 'music') {
+                        isUnlocked = state.profile.unlockedMusic.includes(id);
+                    }
+
+                    // ボタンを複製してイベントリスナーをリセット
+                    const newBtn = actionBtn.cloneNode(true);
+                    actionBtn.parentNode.replaceChild(newBtn, actionBtn);
+
+                    statusText.classList.add('hidden');
+                    newBtn.className = "font-bold py-3 px-8 rounded-full shadow-lg transition-transform active:scale-95 flex items-center min-w-[140px] justify-center text-lg";
+
+                    if (!isUnlocked) {
+                        // 未購入状態
+                        newBtn.innerHTML = `<span class="mr-1">${itemData.cost}</span> <span class="text-sm">LP で交換</span>`;
+                        
+                        if (state.profile.lp >= itemData.cost) {
+                            newBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                            newBtn.classList.add('primary-bg', 'text-white');
+                            newBtn.onclick = () => {
+                                if(confirm(`「${itemData.name}」を ${itemData.cost} LPで交換しますか？`)){
+                                    // 第4引数に成功時のコールバック(自分自身を再描画)を渡す
+                                    purchaseItem(id, type, itemData.cost, () => {
+                                        renderActionButton(); // ★ここで購入後にボタン表示を更新！
+                                    });
+                                }
+                            };
+                        } else {
+                            newBtn.classList.remove('primary-bg', 'text-white');
+                            newBtn.classList.add('bg-gray-400', 'text-gray-100', 'cursor-not-allowed');
+                            newBtn.onclick = () => showToast('LPが足りません');
+                        }
+                    } else {
+                        // 購入済み状態
+                        if (type === 'theme' || type === 'background') {
+                            if (isActive) {
+                                newBtn.innerHTML = `<span>適用中</span>`;
+                                newBtn.className = "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-8 rounded-full shadow-none cursor-default min-w-[140px]";
+                                newBtn.onclick = null;
+                            } else {
+                                newBtn.innerHTML = `<span>適用する</span>`;
+                                newBtn.className = "primary-bg text-white font-bold py-3 px-8 rounded-full shadow-lg active:scale-95 cursor-pointer min-w-[140px]";
+                                newBtn.onclick = () => {
+                                    applyItem(id, type);
+                                    renderActionButton(); // 適用後もボタン表示を更新
+                                };
+                            }
+                        } else {
+                            newBtn.innerHTML = `<span>解放済み</span>`;
+                            newBtn.className = "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold py-3 px-8 rounded-full shadow-none cursor-default min-w-[140px]";
+                            newBtn.onclick = null;
+                        }
+                        statusText.classList.remove('hidden');
+                    }
+                };
+
+                // 初回描画実行
+                renderActionButton();
+
+                // --- ▲▲▲ アクションボタン変更ここまで ▲▲▲ ---
+
+                lucide.createIcons();
                 itemDetailPage.open();
             };
 
