@@ -4654,8 +4654,21 @@
                 $('#registration-screen').classList.remove('hidden');
             });
             
+            // ★修正: Welcome画面から「引き継ぐ」を押した時の挙動
             $('#btn-transfer-start').addEventListener('click', () => {
+                // モーダルを開く
                 openMigrationModal(true);
+
+                // 1. 即座に「受信画面」へ切り替える
+                showMigrationView('migration-receiver-view');
+
+                // 2. このフローの場合のみ、受信画面内の「戻る」ボタンを非表示にする
+                // (送信画面へ戻っても意味がないため)
+                const backBtn = document.querySelector('#migration-receiver-view .migration-back-step');
+                if(backBtn) backBtn.style.display = 'none';
+
+                // 3. PeerJS（受信待機）を開始する
+                initPeerReceiver();
             });
 
             // 登録画面
@@ -4899,12 +4912,12 @@
                 const closeBtn = $('#close-migration-btn');
 
                 // 1. キャンセルボタンの制御
-                if (fromWelcomeScreen) {
-                    closeBtn.style.visibility = 'hidden'; // 非表示だがレイアウトは維持
-                } else {
-                    closeBtn.style.visibility = 'visible';
-                }
+                // ★修正: どちらの場合でも「閉じる」ボタンは常に表示する
+                closeBtn.style.visibility = 'visible';
                 
+                // ★追加: 「戻る」ボタンの表示状態をリセット（通常は表示）
+                $$('.migration-back-step').forEach(btn => btn.style.display = '');
+
                 // 2. 表示アニメーション
                 screen.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
                 screen.classList.add('opacity-100', 'pointer-events-auto', 'scale-100');
