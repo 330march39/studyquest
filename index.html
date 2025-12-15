@@ -6091,6 +6091,8 @@
             $('#close-bg-settings-btn').addEventListener('click', () => backgroundSettingsPage.close());
 
             // ▼▼▼ ルーティン設定画面の制御 ▼▼▼
+
+            let routineSortable = null;
             const routineSettingsPage = new SubPage('routine-settings-screen', {
                 onOpen: () => {
                     renderRoutineList();
@@ -6164,13 +6166,20 @@
             
                 lucide.createIcons({ root: routineListEl });
             
-                // 並び替え (Sortable.js)
+                // 1. 既にインスタンスが存在していたら破棄する（これが重要）
+                if (routineSortable) {
+                    routineSortable.destroy();
+                    routineSortable = null;
+                }
+            
+                // 2. 新しく作成して変数に保存する
                 if (routineListEl && Sortable) {
-                    // 既存のインスタンスがあれば破棄したいが、簡易的に毎回newしてonEndでstate更新
-                    // (厳密にはインスタンス管理したほうが良いですが、今回は簡易実装)
-                    Sortable.create(routineListEl, {
+                    routineSortable = Sortable.create(routineListEl, {
                         handle: '.routine-handle',
                         animation: 150,
+                        delay: 200, // スマホでの誤動作防止用
+                        delayOnTouchOnly: true,
+                        touchStartThreshold: 5,
                         onEnd: (evt) => {
                             const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
                             state.profile.routineTemplate.splice(evt.newIndex, 0, item);
@@ -6205,6 +6214,7 @@
             document.getElementById('close-routine-settings-btn').addEventListener('click', () => routineSettingsPage.close());
 
             // --- 5. BGM設定サブページ ---
+            let bgmSortable = null;
             const bgmSettingsPage = new SubPage('bgm-settings-screen', {
                 onOpen: () => {
                     // トグル設定
@@ -6261,12 +6271,21 @@
                             });
 
                             // Sortable適用
-                            if(Sortable) {
-                                Sortable.create(container, {
+                            // 1. 古いインスタンスを破棄
+                            if (bgmSortable) {
+                                bgmSortable.destroy();
+                                bgmSortable = null;
+                            }
+                
+                            // 2. 新しく作成して保存
+                            if(Sortable && container) {
+                                bgmSortable = Sortable.create(container, {
                                     handle: '.playlist-handle',
                                     animation: 150,
                                     ghostClass: 'sortable-ghost',
-                                    delay: 200, delayOnTouchOnly: true, touchStartThreshold: 5,
+                                    delay: 200, 
+                                    delayOnTouchOnly: true, 
+                                    touchStartThreshold: 5,
                                     onEnd: (evt) => {
                                         const item = state.settings.playlist.splice(evt.oldIndex, 1)[0];
                                         state.settings.playlist.splice(evt.newIndex, 0, item);
