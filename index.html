@@ -1365,15 +1365,6 @@
                     <i data-lucide="check-square" class="w-5 h-5"></i>
                     <span>「今日の予定」を読み込む</span>
                 </button>
-                <hr class="my-3 border-gray-200 dark:border-gray-600">
-                
-                <div class="flex items-center space-x-2 text-sm">
-                    <input type="number" id="break-interval-input" value="2" class="w-16 p-1 border rounded dark:bg-gray-800 dark:border-gray-600">
-                    <span>セクションごとに</span>
-                    <input type="number" id="break-duration-input" value="5" class="w-16 p-1 border rounded dark:bg-gray-800 dark:border-gray-600">
-                    <span>分休憩</span>
-                </div>
-                <button id="add-breaks-btn" class="mt-2 text-sm bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition">休憩を自動挿入</button>
             </div>
             
             <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm"> 
@@ -1533,6 +1524,40 @@
             <div class="h-10"></div>
         </div>
     </div>
+
+    <div id="routine-settings-screen" class="screen-layer">
+    <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 sticky top-0 z-10">
+        <div class="flex items-center flex-1">
+            <button id="close-routine-settings-btn" class="p-2 -ml-2 text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                <div class="flex items-center font-medium primary-text">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                    <span>戻る</span>
+                </div>
+            </button>
+        </div>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">ルーティン設定</h2>
+        <div class="flex-1"></div>
+    </header>
+
+    <div class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            「今日の予定」を読み込む際のパターンを設定します。<br>
+            このリストの順序に従ってタスクが割り当てられ、最後まで行くと最初に戻って繰り返されます。
+        </p>
+
+        <div id="routine-list" class="space-y-2 mb-4">
+            </div>
+
+        <div class="flex justify-between mt-4">
+            <button id="routine-add-section-btn" class="flex-1 mr-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center">
+                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>学習枠 (変数)
+            </button>
+            <button id="routine-add-break-btn" class="flex-1 ml-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center">
+                <i data-lucide="coffee" class="w-4 h-4 mr-2"></i>休憩
+            </button>
+        </div>
+    </div>
+</div>
 
     <!-- ===== モーダル ===== -->
     <div id="quiz-modal" class="fixed inset-0 bg-black/70 z-50 flex-col hidden"><div class="w-full h-full max-w-lg mx-auto bg-gray-100 dark:bg-gray-900 flex flex-col"><header class="p-3 flex items-center justify-between shadow-md bg-white dark:bg-gray-800"><h2 id="quiz-modal-title" class="truncate font-bold"></h2><button class="close-modal-btn p-1" data-modal="quiz-modal"><i data-lucide="x"></i></button></header><div class="flex-grow relative"><div class="absolute inset-0 flex items-center justify-center"><div id="loader"></div></div><iframe id="quiz-iframe" class="w-full h-full border-0 invisible" sandbox="allow-scripts allow-forms allow-popups"></iframe></div></div></div>
@@ -2345,6 +2370,11 @@
                         activeBackground: 'default',
                         unlockedGames: [], // 解放済みゲームID
                         unlockedMusic: [], // 解放済み音楽ID
+                        routineTemplate: [
+                            { id: 'tmpl_1', type: 'section', duration: 25 * 60 }, // 25分学習
+                            { id: 'tmpl_2', type: 'section', duration: 25 * 60 }, // 25分学習
+                            { id: 'tmpl_3', type: 'break', duration: 5 * 60 }     // 5分休憩
+                        ],
                         tasksLastUpdated: null
                     },
                     tasks: [],
@@ -2822,6 +2852,9 @@
                         // --- 3. 「クエスト」グループ ---
                         settingsPage.appendChild(createSectionTitle('クエスト'));
                         const questList = createListContainer();
+                        questList.appendChild(createListItem('repeat', 'ルーティン設定', 'bg-teal-500', () => {
+                            routineSettingsPage.open();
+                        }));
                     
                         // BGM設定
                         questList.appendChild(createListItem('music', 'BGM設定', 'bg-pink-500', () => {
@@ -3898,32 +3931,6 @@
                     type: 'break',
                     duration: 5 * 60
                 });
-                renderQuestPlan();
-            });
-
-            addBreaksBtn.addEventListener('click', () => {
-                const interval = parseInt($('#break-interval-input').value) || 2;
-                const duration = parseInt($('#break-duration-input').value) || 5;
-                const newPlan = [];
-                let sectionCount = 0;
-                
-                // 休憩を除いたセクションのみのリストを元にする
-                const sections = quest.plan.filter(item => item.type === 'section');
-
-                sections.forEach((item, index) => {
-                    newPlan.push(item);
-                    sectionCount++;
-                    // 最後のセクション以外で、intervalの倍数番目なら休憩を追加
-                    if (sectionCount % interval === 0 && index !== sections.length - 1) {
-                        newPlan.push({
-                            id: Date.now() + Math.random(),
-                            type: 'break',
-                            duration: duration * 60
-                        });
-                    }
-                });
-                
-                quest.plan = newPlan;
                 renderQuestPlan();
             });
 
@@ -5540,29 +5547,59 @@
                     }
                 
                 // 5. 「今日の予定」読み込みボタン
-                const loadTasksBtn = $('#load-tasks-btn');
-                if (loadTasksBtn) {
-                    loadTasksBtn.addEventListener('click', () => {
-                        // 完了していないタスクのみをフィルタリングして読み込む
-                        const activeTasks = state.tasks.filter(t => !t.completed);
-
-                        if (activeTasks.length === 0) {
-                            showToast('「今日の予定」に未完了のタスクがありません。');
-                            // quest.plan = []; // 既存のプランを消したくない場合はコメントアウト
-                        } else {
-                            // state.tasks を quest.plan にマッピング
-                            quest.plan = activeTasks.map(task => ({
+                loadTasksBtn.addEventListener('click', () => {
+                    const activeTasks = state.tasks.filter(t => !t.completed);
+                
+                    if (activeTasks.length === 0) {
+                        showToast('「今日の予定」に未完了のタスクがありません。');
+                        return;
+                    }
+                
+                    // テンプレートが空の場合はデフォルト（学習のみ）として扱う
+                    const template = (state.profile.routineTemplate && state.profile.routineTemplate.length > 0) 
+                        ? state.profile.routineTemplate 
+                        : [{ type: 'section', duration: 25 * 60 }];
+                
+                    quest.plan = [];
+                    let taskIndex = 0;
+                    let templateIndex = 0;
+                
+                    // タスクがなくなるまでテンプレートをループして配置
+                    // (無限ループ防止のため、最大100回などのリミットを設けても良い)
+                    while (taskIndex < activeTasks.length) {
+                        const templateItem = template[templateIndex % template.length];
+                        
+                        if (templateItem.type === 'section') {
+                            // 学習セクションの場合、タスクを割り当てる
+                            const task = activeTasks[taskIndex];
+                            quest.plan.push({
                                 id: Date.now() + Math.random(),
                                 type: 'section',
                                 text: task.text,
-                                duration: 25 * 60,
+                                duration: templateItem.duration,
                                 originalTaskId: task.id
-                            }));
-                            showToast(`${activeTasks.length} 件の未完了タスクを読み込みました。`);
+                            });
+                            taskIndex++;
+                        } else {
+                            // 休憩の場合、そのまま追加
+                            quest.plan.push({
+                                id: Date.now() + Math.random(),
+                                type: 'break',
+                                text: 'ブレイクタイム',
+                                duration: templateItem.duration
+                            });
                         }
-                        renderQuestPlan();
-                    });
-                }
+                        
+                        templateIndex++;
+                    }
+                
+                    // 最後に休憩が来て終わるのは不自然な場合（オプション）
+                    // 末尾が休憩なら削除する等の処理を入れても良いですが、
+                    // ルーティン通りにするならそのままでOKです。
+                
+                    showToast(`${activeTasks.length} 件のタスクをルーティンに適用しました。`);
+                    renderQuestPlan();
+                });
                 
                 // 最後に外観を更新
                 $('#background-scope-toggle').checked = state.settings.backgroundScopeGlobal;
@@ -6054,6 +6091,120 @@
                 }
             });
             $('#close-bg-settings-btn').addEventListener('click', () => backgroundSettingsPage.close());
+
+            // ▼▼▼ ルーティン設定画面の制御 ▼▼▼
+            const routineSettingsPage = new SubPage('routine-settings-screen', {
+                onOpen: () => {
+                    renderRoutineList();
+                }
+            });
+            
+            const routineListEl = document.getElementById('routine-list');
+            
+            // リスト描画関数
+            const renderRoutineList = () => {
+                routineListEl.innerHTML = '';
+                
+                state.profile.routineTemplate.forEach((item, index) => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'routine-item bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex items-center space-x-3';
+                    itemEl.setAttribute('data-id', item.id);
+            
+                    let contentHTML = '';
+                    if (item.type === 'section') {
+                        contentHTML = `
+                            <div class="p-2 rounded bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                                <i data-lucide="book-open" class="w-5 h-5"></i>
+                            </div>
+                            <div class="flex-grow min-w-0">
+                                <p class="text-sm font-bold text-gray-800 dark:text-gray-200">学習セクション (タスク)</p>
+                                <p class="text-xs text-gray-500">予定がここに入ります</p>
+                            </div>
+                        `;
+                    } else {
+                        contentHTML = `
+                            <div class="p-2 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                                <i data-lucide="coffee" class="w-5 h-5"></i>
+                            </div>
+                            <div class="flex-grow min-w-0">
+                                <p class="text-sm font-bold text-gray-800 dark:text-gray-200">ブレイクタイム</p>
+                            </div>
+                        `;
+                    }
+            
+                    itemEl.innerHTML = `
+                        <div class="routine-handle cursor-grab active:cursor-grabbing text-gray-400">
+                            <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                        </div>
+                        ${contentHTML}
+                        <div class="flex items-center space-x-1">
+                            <input type="number" value="${item.duration / 60}" class="routine-duration-input w-12 p-1 border rounded text-center dark:bg-gray-700 dark:border-gray-600 text-sm">
+                            <span class="text-xs text-gray-500">分</span>
+                        </div>
+                        <button class="remove-routine-btn text-red-400 hover:text-red-600 p-2">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    `;
+            
+                    // 時間変更イベント
+                    itemEl.querySelector('.routine-duration-input').addEventListener('change', (e) => {
+                        let val = parseInt(e.target.value);
+                        if(val < 1) val = 1;
+                        item.duration = val * 60;
+                        saveState();
+                    });
+            
+                    // 削除イベント
+                    itemEl.querySelector('.remove-routine-btn').addEventListener('click', () => {
+                        state.profile.routineTemplate.splice(index, 1);
+                        saveState();
+                        renderRoutineList();
+                    });
+            
+                    routineListEl.appendChild(itemEl);
+                });
+            
+                lucide.createIcons({ root: routineListEl });
+            
+                // 並び替え (Sortable.js)
+                if (routineListEl && Sortable) {
+                    // 既存のインスタンスがあれば破棄したいが、簡易的に毎回newしてonEndでstate更新
+                    // (厳密にはインスタンス管理したほうが良いですが、今回は簡易実装)
+                    Sortable.create(routineListEl, {
+                        handle: '.routine-handle',
+                        animation: 150,
+                        onEnd: (evt) => {
+                            const item = state.profile.routineTemplate.splice(evt.oldIndex, 1)[0];
+                            state.profile.routineTemplate.splice(evt.newIndex, 0, item);
+                            saveState();
+                        }
+                    });
+                }
+            };
+            
+            // 追加ボタンイベント
+            document.getElementById('routine-add-section-btn').addEventListener('click', () => {
+                state.profile.routineTemplate.push({
+                    id: Date.now(),
+                    type: 'section',
+                    duration: 25 * 60
+                });
+                saveState();
+                renderRoutineList();
+            });
+            
+            document.getElementById('routine-add-break-btn').addEventListener('click', () => {
+                state.profile.routineTemplate.push({
+                    id: Date.now(),
+                    type: 'break',
+                    duration: 5 * 60
+                });
+                saveState();
+                renderRoutineList();
+            });
+            
+            // 戻るボタン
+            document.getElementById('close-routine-settings-btn').addEventListener('click', () => routineSettingsPage.close());
 
             // --- 5. BGM設定サブページ ---
             const bgmSettingsPage = new SubPage('bgm-settings-screen', {
