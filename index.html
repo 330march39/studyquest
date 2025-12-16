@@ -799,14 +799,41 @@
             outline: none;
             border-bottom: 2px solid var(--primary-color);
         }
-        /* --- 追加: バナー用スクロールバー非表示 --- */
-        .scrollbar-hide::-webkit-scrollbar {
+        /* ▼▼▼ 追加: バナー用CSS ▼▼▼ */
+        .banner-carousel {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory; /* スワイプでピタッと止まる */
+            -webkit-overflow-scrolling: touch;
+            gap: 1rem; /* 画像間の隙間 */
+            padding: 0 1.5rem; /* 両端の余白（これで見切れを作る） */
+            width: 100%;
+            scrollbar-width: none; /* Firefox用スクロールバー隠し */
+            -ms-overflow-style: none; /* IE/Edge用 */
+        }
+        /* Chrome/Safari用スクロールバー隠し */
+        .banner-carousel::-webkit-scrollbar {
             display: none;
         }
-        .scrollbar-hide {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+
+        .banner-item {
+            flex: 0 0 85%; /* 画面の85%の幅（これにより前後の端が見える） */
+            aspect-ratio: 3 / 2; /* 3:2の比率を固定 */
+            scroll-snap-align: center; /* 真ん中に止まる */
+            border-radius: 1rem;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+        
+        .banner-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 枠に合わせてトリミング */
+            pointer-events: none; /* 画像のドラッグ防止 */
+        }
+        /* ▲▲▲ 追加ここまで ▲▲▲ */
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -829,16 +856,9 @@
 
         <main class="flex-grow overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
             <div id="home-page" class="page active p-4 space-y-6">
-
-                <header class="flex justify-between items-center mb-6">
-                </header>
-        
-            <div class="relative w-full aspect-[3/2] overflow-hidden rounded-2xl mb-6 shadow-sm bg-gray-100 dark:bg-gray-800">
-                <div id="banner-track" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide h-full items-center py-2 px-[7.5%] box-content">
-                    </div>
-            </div>
-            <div id="date-display" class="text-gray-500 dark:text-gray-400 text-sm font-bold mb-1"></div>
-                
+                <div class="w-full -mx-4"> <div id="home-banner-carousel" class="banner-carousel">
+                        </div>
+                </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
                     <p id="today-date" class="text-lg font-semibold text-gray-600 dark:text-gray-300"></p>
                 </div>
@@ -1891,6 +1911,12 @@
                     { id: 'japanese1', title: "国語 - 枕草子", subject: "国語", genre: "古典", tags: ['history1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSe-0P7p_L-rT9c-yS_eD-wA9iR_bO8kM-nL-u_V-iE7xS-tQ/viewform?usp=sf_link" },
                     { id: 'history1', title: "社会 - 鎌倉時代", subject: "社会", genre: "歴史", tags: ['japanese1'], url: "https://docs.google.com/forms/d/e/1FAIpQLSeLprqPbZCZv2ufQ2qYqltnRiUE1FsBYODa_eNwOVO1NqZwBw/viewform?usp=pp_url" },
                 ],
+
+                // ▼▼▼ 追加: バナーデータ ▼▼▼
+                banners: [
+                    { id: 1, url: 'banner_1.png', link: '#' }, // 画像パスを修正してください
+                    { id: 2, url: 'banner_2.png', link: '#' }
+                ],
                 
                 themes: {
                     default: { name: 'デフォルト', color: '#4f46e5', hover: '#4338ca', cost: 0 },
@@ -1970,6 +1996,8 @@
             let stopwatch = { interval: null, startTime: 0, elapsedTime: 0, isRunning: false, isPaused: false };
             let miniTimerTemporarilyHidden = false;
             let quizTimer = { startTime: null };
+
+            let bannerInterval = null;
 
             let previewAudio = new Audio(); // 試聴用
             let previewTimeout = null;      // 30秒停止用タイマー
@@ -2594,6 +2622,53 @@
                     'home-page': () => {
                         const today = new Date();
                         $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]})`;
+
+                        const bannerContainer = document.getElementById('home-banner-carousel');
+                        
+                        // バナーの中身を生成（既に生成済みなら再生成しないようにチェックしても良いですが、簡易的に毎回リセットします）
+                        if (bannerContainer) {
+                            // ダミー画像(placehold.co)を使用しています。本番では initialData.banners の url を使ってください
+                            bannerContainer.innerHTML = initialData.banners.map(b => `
+                                <div class="banner-item">
+                                    <img src="${b.url}" alt="banner" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
+                                </div>
+                            `).join('');
+
+                            // 自動スクロール処理
+                            if (bannerInterval) clearInterval(bannerInterval); // 既存のタイマーをクリア
+
+                            const scrollNext = () => {
+                                // コンテナが存在しない、またはユーザーが触っている間はスキップしたい場合はここに判定を追加
+                                const itemWidth = bannerContainer.querySelector('.banner-item').offsetWidth;
+                                const gap = 16; // CSSのgap: 1rem = 16px (ルート設定による)
+                                const oneSlide = itemWidth + gap;
+                                
+                                const maxScroll = bannerContainer.scrollWidth - bannerContainer.clientWidth;
+                                const currentScroll = bannerContainer.scrollLeft;
+
+                                // 次の位置へスムーズにスクロール
+                                if (currentScroll + oneSlide >= maxScroll - 10) {
+                                    // 最後まで来たら最初に戻る
+                                    bannerContainer.scrollTo({ left: 0, behavior: 'smooth' });
+                                } else {
+                                    bannerContainer.scrollBy({ left: oneSlide, behavior: 'smooth' });
+                                }
+                            };
+
+                            // 4秒ごとにスクロール
+                            bannerInterval = setInterval(scrollNext, 4000);
+
+                            // ユーザーが触ったら（スワイプしたら）タイマーを止めて、離したら再開する
+                            bannerContainer.addEventListener('touchstart', () => {
+                                clearInterval(bannerInterval);
+                            }, { passive: true });
+
+                            bannerContainer.addEventListener('touchend', () => {
+                                // 少し待ってから再開
+                                if (bannerInterval) clearInterval(bannerInterval);
+                                bannerInterval = setInterval(scrollNext, 4000);
+                            }, { passive: true });
+                        }
 
                         // --- ▼▼▼ ホーム画面リスト描画の修正 ▼▼▼ ---
                         const countdownContainer = $('#countdown-list');
@@ -5601,93 +5676,6 @@
                 lucide.createIcons();
             };
 
-            // ==========================================
-            // ▼▼▼ 追加: ホーム画面バナー制御 ▼▼▼
-            // ==========================================
-            const bannerImages = [
-                // ここに画像のURLを設定してください
-                'banner_1.png',
-                'banner_2.png',
-
-            ];
-            
-            let bannerAutoScrollTimer;
-            const bannerTrack = document.getElementById('banner-track');
-            
-            function initBanner() {
-                if (!bannerTrack || bannerImages.length === 0) return;
-            
-                // 中身を完全にリセット
-                bannerTrack.innerHTML = '';
-            
-                // 画像アイテムの生成
-                bannerImages.forEach((src, index) => {
-                    const item = document.createElement('div');
-                    // w-[85%] で横幅を指定し、flex-shrink-0 で縮小を防止
-                    // mx-2 で画像同士の隙間を作ります
-                    item.className = 'snap-center flex-shrink-0 w-[100%] h-full rounded-xl overflow-hidden mx-2 relative shadow-sm transition-transform bg-gray-200';
-                    
-                    // ※重要: w-[100%] にしていますが、親の bannerTrack に px-[7.5%] があるため、
-                    // 実際には画面幅の85%程度に見えるよう調整されます (CSSの書き方により微調整が必要な場合あり)
-                    // ここでは「スマホで見切れさせる」ために幅を固定します。
-                    item.style.width = '85%'; 
-
-                    item.innerHTML = `<img src="${src}" alt="banner ${index + 1}" class="w-full h-full object-cover pointer-events-none select-none">`;
-                    bannerTrack.appendChild(item);
-                });
-            
-                // 自動スクロール開始
-                startBannerAutoScroll();
-            
-                // ユーザー操作中は自動スクロールを停止
-                let isScrolling;
-                bannerTrack.addEventListener('scroll', () => {
-                    stopBannerAutoScroll();
-                    clearTimeout(isScrolling);
-                    // スクロール操作終了から3秒後に再開
-                    isScrolling = setTimeout(startBannerAutoScroll, 3000);
-                }, { passive: true });
-            
-                // タッチ開始時にも停止
-                bannerTrack.addEventListener('touchstart', stopBannerAutoScroll, { passive: true });
-                bannerTrack.addEventListener('mousedown', stopBannerAutoScroll);
-            }
-            
-            function startBannerAutoScroll() {
-                stopBannerAutoScroll(); // 重複防止
-                bannerAutoScrollTimer = setInterval(() => {
-                    if (!bannerTrack) return;
-            
-                    const trackWidth = bannerTrack.clientWidth;
-                    const scrollWidth = bannerTrack.scrollWidth;
-                    const currentScrollLeft = bannerTrack.scrollLeft;
-                    
-                    // 1枚分の幅（概算：画面幅 * 0.85 + 余白）
-                    const itemWidth = trackWidth * 0.85; 
-            
-                    // 次のスクロール位置
-                    let nextScrollLeft = currentScrollLeft + itemWidth;
-            
-                    // 最後まで行っていたら最初に戻る（遊びを持たせて判定）
-                    if (nextScrollLeft >= scrollWidth - (trackWidth / 2)) {
-                         nextScrollLeft = 0;
-                    }
-            
-                    bannerTrack.scrollTo({
-                        left: nextScrollLeft,
-                        behavior: 'smooth'
-                    });
-            
-                }, 4000); // 4秒ごとにスクロール
-            }
-            
-            function stopBannerAutoScroll() {
-                if (bannerAutoScrollTimer) {
-                    clearInterval(bannerAutoScrollTimer);
-                    bannerAutoScrollTimer = null;
-                }
-            }
-
             const init = () => {
                 if (window.Chart) {
                     Chart.defaults.font.family = "'LINE Seed JP', 'Inter', 'Noto Sans JP', sans-serif";
@@ -6735,7 +6723,6 @@
                 }
                 
                 lucide.createIcons();
-                initBanner();
             };
             
             init();
