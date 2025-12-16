@@ -3941,7 +3941,7 @@
                 quest.plan.push({
                     id: Date.now(),
                     type: 'section',
-                    text: '新しいセクション',
+                    text: '', // ★ここを空文字にする（これで入力欄が空になる）
                     duration: 25 * 60
                 });
                 renderQuestPlan();
@@ -4198,7 +4198,7 @@
 
             /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
 
-            // クエストプランのリストをレンダリングする関数（表示/編集 切り替え版）
+            // クエストプランのリストをレンダリングする関数（時間強制・未入力表示対応版）
             function renderQuestPlan() {
                 questPlanListEl.innerHTML = '';
                 
@@ -4230,9 +4230,12 @@
                             </div>
                         `;
                         
-                        // --- テキスト整形ロジック (リスト表示用) ---
+                        // --- テキスト整形ロジック ---
                         let viewHTML = '';
-                        const match = item.text.match(/^(.+?)[\s　]+(.+)$/);
+                        // テキストが空なら「新しいセクション」を表示用テキストとする
+                        const displayText = item.text ? item.text : '新しいセクション';
+                        
+                        const match = displayText.match(/^(.+?)[\s　]+(.+)$/);
                         if (match) {
                             // スペースがあれば分割表示
                             viewHTML = `
@@ -4240,11 +4243,14 @@
                                 <span class="text-xs text-gray-500 dark:text-gray-400 block mt-0.5">${match[2]}</span>
                             `;
                         } else {
-                            // なければそのまま表示（空の場合はプレースホルダー的文字）
-                            viewHTML = `<span class="text-base font-bold text-gray-800 dark:text-gray-200 leading-tight block">${item.text || '<span class="text-gray-300">タスクを入力</span>'}</span>`;
+                            // なければそのまま表示
+                            // item.textが空（displayTextが'新しいセクション'）の場合は、少し色を薄くするか、通常通り表示するか
+                            // ここではご要望通り「新しいセクション」として通常表示に近い形で出します
+                            const textColor = item.text ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400';
+                            viewHTML = `<span class="text-base font-bold ${textColor} leading-tight block">${displayText}</span>`;
                         }
             
-                        // 表示用div と 編集用input を両方用意し、classで切り替える仕組み
+                        // 表示用div と 編集用input
                         contentAreaHTML = `
                             <div class="relative w-full">
                                 <div class="quest-item-view" onclick="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.focus();">
@@ -4253,7 +4259,7 @@
                                 <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''}" 
                                     class="quest-item-input hidden" 
                                     onblur="this.classList.add('hidden'); this.previousElementSibling.classList.remove('hidden');"
-                                    placeholder="例: 数学 p10~12">
+                                    placeholder="新しいセクション">
                             </div>
                         `;
                         
@@ -4284,22 +4290,18 @@
                         </div>
             
                         <div class="swipe-content flex items-center bg-white dark:bg-gray-800 p-3 relative z-10 w-full border border-gray-200 dark:border-gray-700 rounded-xl">
-                            
                             <div class="mr-3 flex-shrink-0">
                                 ${iconHTML}
                             </div>
-            
                             <div class="flex-grow min-w-0 mr-3">
                                 ${contentAreaHTML}
                             </div>
-            
                             <div class="flex items-center space-x-1 pl-3 border-l border-gray-100 dark:border-gray-700 h-10 flex-shrink-0">
                                 <input type="number" value="${item.duration / 60}" 
                                     class="quest-item-duration w-10 bg-transparent text-center font-bold text-base text-gray-800 dark:text-gray-200 focus:outline-none focus:border-b-2 focus:border-indigo-500 transition-colors p-0"
                                 >
                                 <span class="text-[10px] text-gray-400 font-bold mt-1">分</span>
                             </div>
-            
                             <button class="quest-handle p-2 text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 cursor-grab active:cursor-grabbing touch-none transition-colors -mr-2 flex-shrink-0">
                                 <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                             </button>
@@ -4315,22 +4317,31 @@
                         }
                     });
             
-                    // イベントリスナー
+                    // テキスト変更イベント
                     const input = itemEl.querySelector('.quest-item-input');
                     if (input) {
-                        // 変更があったらデータを更新して、再描画（表示モードを最新にするため）
                         input.addEventListener('change', (e) => {
-                            item.text = e.target.value;
+                            item.text = e.target.value; // 空文字なら空文字のまま保存
                             item.originalTaskId = e.target.dataset.originalId || null;
-                            renderQuestPlan(); // 確定時にリストを再描画して表示モードを更新
+                            renderQuestPlan(); // 再描画して「新しいセクション」表示にする
                         });
                     }
             
+                    // 時間変更イベント（ここを修正）
                     const durationInput = itemEl.querySelector('.quest-item-duration');
                     durationInput.addEventListener('change', (e) => {
                         let val = parseInt(e.target.value);
-                        if (val < 1) val = 1;
+                        
+                        // デフォルト値の設定 (セクションなら25、休憩なら5)
+                        const defaultVal = (item.type === 'section') ? 25 : 5;
+            
+                        // NaN(空欄) または 0以下 の場合はデフォルト値を適用
+                        if (isNaN(val) || val <= 0) {
+                            val = defaultVal;
+                        }
+                        
                         item.duration = val * 60;
+                        renderQuestPlan(); // 入力欄に数値を反映させるため再描画
                     });
                 });
             
