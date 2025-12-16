@@ -799,6 +799,14 @@
             outline: none;
             border-bottom: 2px solid var(--primary-color);
         }
+        /* --- 追加: バナー用スクロールバー非表示 --- */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -821,6 +829,19 @@
 
         <main class="flex-grow overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
             <div id="home-page" class="page active p-4 space-y-6">
+
+                <header class="flex justify-between items-center mb-6">
+                </header>
+        
+            <div class="relative w-full aspect-[3/2] overflow-hidden rounded-2xl mb-6 shadow-sm bg-gray-100 dark:bg-gray-800">
+                <div id="banner-track" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide h-full items-center py-2">
+                    <div class="flex-shrink-0 w-[7.5%]"></div>
+                    
+                    <div class="flex-shrink-0 w-[4%]"></div>
+                </div>
+            </div>
+            <div id="date-display" class="text-gray-500 dark:text-gray-400 text-sm font-bold mb-1"></div>
+                
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
                     <p id="today-date" class="text-lg font-semibold text-gray-600 dark:text-gray-300"></p>
                 </div>
@@ -5583,6 +5604,88 @@
                 lucide.createIcons();
             };
 
+            // ==========================================
+            // ▼▼▼ 追加: ホーム画面バナー制御 ▼▼▼
+            // ==========================================
+            const bannerImages = [
+                // ここに画像のURLを設定してください（現在はダミー画像）
+                'https://placehold.co/600x400/6366f1/ffffff?text=Event+1',
+                'https://placehold.co/600x400/10b981/ffffff?text=News+2',
+                'https://placehold.co/600x400/f59e0b/ffffff?text=Guide+3',
+            ];
+            
+            let bannerAutoScrollTimer;
+            const bannerTrack = document.getElementById('banner-track');
+            
+            function initBanner() {
+                if (!bannerTrack || bannerImages.length === 0) return;
+            
+                // 既存のコンテンツをクリア（余白用ダミーは残す必要があるため注意深く挿入）
+                const spacerStart = bannerTrack.firstElementChild;
+                const spacerEnd = bannerTrack.lastElementChild;
+                bannerTrack.innerHTML = '';
+                bannerTrack.appendChild(spacerStart);
+            
+                // 画像アイテムの生成
+                bannerImages.forEach((src, index) => {
+                    const item = document.createElement('div');
+                    // w-[85%]: 画面幅の85%を占有（残りで前後が見える）
+                    // snap-center: この要素の中央にスクロール位置が合う
+                    item.className = 'snap-center flex-shrink-0 w-[85%] h-full rounded-xl overflow-hidden mx-2 relative shadow-sm transition-transform';
+                    item.innerHTML = `<img src="${src}" alt="banner ${index + 1}" class="w-full h-full object-cover">`;
+                    bannerTrack.appendChild(item);
+                });
+            
+                bannerTrack.appendChild(spacerEnd);
+            
+                // 自動スクロール開始
+                startBannerAutoScroll();
+            
+                // ユーザー操作中は自動スクロールを停止
+                let isScrolling;
+                bannerTrack.addEventListener('scroll', () => {
+                    stopBannerAutoScroll();
+                    clearTimeout(isScrolling);
+                    // スクロール操作終了から2秒後に再開
+                    isScrolling = setTimeout(startBannerAutoScroll, 2000);
+                }, { passive: true });
+            
+                bannerTrack.addEventListener('touchstart', stopBannerAutoScroll, { passive: true });
+                bannerTrack.addEventListener('mousedown', stopBannerAutoScroll);
+            }
+            
+            function startBannerAutoScroll() {
+                stopBannerAutoScroll(); // 二重起動防止
+                bannerAutoScrollTimer = setInterval(() => {
+                    if (!bannerTrack) return;
+            
+                    // 現在のスクロール位置から、次のアイテムの中心までの距離を計算
+                    const currentScrollLeft = bannerTrack.scrollLeft;
+                    const trackWidth = bannerTrack.clientWidth;
+                    const scrollWidth = bannerTrack.scrollWidth;
+                    
+                    // アイテムの幅（マージン含む概算）
+                    const itemWidth = trackWidth * 0.85 + 16; // 85%幅 + mx-2(16px)
+            
+                    let nextScrollLeft = currentScrollLeft + itemWidth;
+            
+                    // 最後まで到達していたら最初に戻る
+                    if (nextScrollLeft >= scrollWidth - trackWidth / 2) {
+                         nextScrollLeft = 0;
+                    }
+            
+                    bannerTrack.scrollTo({
+                        left: nextScrollLeft,
+                        behavior: 'smooth'
+                    });
+            
+                }, 4000); // 4秒ごとにスクロール
+            }
+            
+            function stopBannerAutoScroll() {
+                clearInterval(bannerAutoScrollTimer);
+            }
+
             const init = () => {
                 if (window.Chart) {
                     Chart.defaults.font.family = "'LINE Seed JP', 'Inter', 'Noto Sans JP', sans-serif";
@@ -6630,6 +6733,7 @@
                 }
                 
                 lucide.createIcons();
+                initBanner();
             };
             
             init();
