@@ -799,41 +799,62 @@
             outline: none;
             border-bottom: 2px solid var(--primary-color);
         }
-        /* ▼▼▼ 追加: バナー用CSS ▼▼▼ */
+        
+        /* ▼▼▼ 修正: バナー用CSS (中央揃え・ループ対応版) ▼▼▼ */
+        .banner-wrapper {
+            /* アプリの端まで広げるための設定 */
+            width: 100vw; 
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+            overflow: hidden; /* 横スクロールバーを隠す */
+        }
+
         .banner-carousel {
             display: flex;
             overflow-x: auto;
             overflow-y: hidden;
-            scroll-snap-type: x mandatory; /* スワイプでピタッと止まる */
+            scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
-            gap: 1rem; /* 画像間の隙間 */
-            padding: 0 1.5rem; /* 両端の余白（これで見切れを作る） */
+            
+            /* 画像の幅(85%)に対する残りの余白(15%)を左右(7.5%)に分けて中央配置 */
+            padding: 0 7.5%; 
+            
+            gap: 16px; /* 画像間の隙間 */
             width: 100%;
-            scrollbar-width: none; /* Firefox用スクロールバー隠し */
-            -ms-overflow-style: none; /* IE/Edge用 */
+            
+            /* スクロールバー非表示 */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        /* Chrome/Safari用スクロールバー隠し */
         .banner-carousel::-webkit-scrollbar {
             display: none;
         }
 
         .banner-item {
-            flex: 0 0 85%; /* 画面の85%の幅（これにより前後の端が見える） */
-            aspect-ratio: 3 / 2; /* 3:2の比率を固定 */
-            scroll-snap-align: center; /* 真ん中に止まる */
+            /* 画面幅の85%を確保して、前後の画像が見切れるようにする */
+            flex: 0 0 85%;
+            aspect-ratio: 3 / 2;
+            scroll-snap-align: center; /* 常に中央にスナップ */
+            
             border-radius: 1rem;
             overflow: hidden;
             position: relative;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            
+            /* 画像サイズ調整 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .banner-item img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* 枠に合わせてトリミング */
-            pointer-events: none; /* 画像のドラッグ防止 */
+            object-fit: cover;
+            pointer-events: none; /* ドラッグ防止 */
+            user-select: none;
         }
-        /* ▲▲▲ 追加ここまで ▲▲▲ */
+        /* ▲▲▲ 修正ここまで ▲▲▲ */
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -856,7 +877,8 @@
 
         <main class="flex-grow overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
             <div id="home-page" class="page active p-4 space-y-6">
-                <div class="w-full -mx-4"> <div id="home-banner-carousel" class="banner-carousel">
+                <div class="banner-wrapper mb-6">
+                    <div id="home-banner-carousel" class="banner-carousel">
                         </div>
                 </div>
                 <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
@@ -2623,52 +2645,107 @@
                         const today = new Date();
                         $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]})`;
 
+                        // ▼▼▼ 修正: バナーの無限ループ＆自動スクロール処理 ▼▼▼
                         const bannerContainer = document.getElementById('home-banner-carousel');
                         
-                        // バナーの中身を生成（既に生成済みなら再生成しないようにチェックしても良いですが、簡易的に毎回リセットします）
-                        if (bannerContainer) {
-                            // ダミー画像(placehold.co)を使用しています。本番では initialData.banners の url を使ってください
-                            bannerContainer.innerHTML = initialData.banners.map(b => `
+                        // コンテナがあり、かつまだ初期化されていない場合のみ実行
+                        // (dataset.initializedを使って重複実行を防ぎます)
+                        if (bannerContainer && !bannerContainer.dataset.initialized) {
+                            bannerContainer.dataset.initialized = 'true'; // 初期化済みフラグ
+
+                            // 1. バナーデータの用意
+                            const originalBanners = initialData.banners || [];
+                            if (originalBanners.length === 0) return;
+
+                            // 2. HTML生成（無限ループ用に、最初の画像を最後に追加＝クローン）
+                            // [画像1] [画像2] [画像3] + [画像1(クローン)]
+                            const slidesHTML = originalBanners.map(b => `
                                 <div class="banner-item">
                                     <img src="${b.url}" alt="banner" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
                                 </div>
                             `).join('');
+                            
+                            // クローン（最初の1枚）を作成
+                            const firstCloneHTML = `
+                                <div class="banner-item">
+                                    <img src="${originalBanners[0].url}" alt="banner" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${originalBanners[0].id}'">
+                                </div>
+                            `;
 
-                            // 自動スクロール処理
-                            if (bannerInterval) clearInterval(bannerInterval); // 既存のタイマーをクリア
+                            bannerContainer.innerHTML = slidesHTML + firstCloneHTML;
 
-                            const scrollNext = () => {
-                                // コンテナが存在しない、またはユーザーが触っている間はスキップしたい場合はここに判定を追加
-                                const itemWidth = bannerContainer.querySelector('.banner-item').offsetWidth;
-                                const gap = 16; // CSSのgap: 1rem = 16px (ルート設定による)
-                                const oneSlide = itemWidth + gap;
+                            // 3. 自動スクロールのロジック
+                            let currentSlideIndex = 0;
+                            const totalSlides = originalBanners.length; // クローンを含まない枚数
+                            let isTouching = false;
+
+                            // 次のスライドへ進む関数
+                            const scrollToNext = () => {
+                                // アイテムの幅 + gap を取得
+                                const item = bannerContainer.querySelector('.banner-item');
+                                if(!item) return;
                                 
-                                const maxScroll = bannerContainer.scrollWidth - bannerContainer.clientWidth;
-                                const currentScroll = bannerContainer.scrollLeft;
+                                const itemWidth = item.offsetWidth;
+                                const gap = 16; // CSSのgap
+                                const oneSlideWidth = itemWidth + gap;
 
-                                // 次の位置へスムーズにスクロール
-                                if (currentScroll + oneSlide >= maxScroll - 10) {
-                                    // 最後まで来たら最初に戻る
-                                    bannerContainer.scrollTo({ left: 0, behavior: 'smooth' });
-                                } else {
-                                    bannerContainer.scrollBy({ left: oneSlide, behavior: 'smooth' });
+                                currentSlideIndex++;
+
+                                // スクロール実行（スムーズ）
+                                bannerContainer.scrollTo({
+                                    left: currentSlideIndex * oneSlideWidth,
+                                    behavior: 'smooth'
+                                });
+
+                                // もし「クローン（最後のダミー）」まで到達したら
+                                if (currentSlideIndex === totalSlides) {
+                                    // アニメーションが終わる頃(500ms後)に、こっそり先頭(0番目)に戻す
+                                    setTimeout(() => {
+                                        bannerContainer.scrollTo({
+                                            left: 0,
+                                            behavior: 'instant' // 瞬時に戻る（ユーザーには気づかれない）
+                                        });
+                                        currentSlideIndex = 0;
+                                    }, 500); // smoothスクロールの時間に合わせて調整
                                 }
                             };
 
-                            // 4秒ごとにスクロール
-                            bannerInterval = setInterval(scrollNext, 4000);
+                            // タイマー設定 (4秒ごと)
+                            if (bannerInterval) clearInterval(bannerInterval);
+                            bannerInterval = setInterval(scrollToNext, 4000);
 
-                            // ユーザーが触ったら（スワイプしたら）タイマーを止めて、離したら再開する
+                            // 4. 手動スワイプ時の処理
+                            // 触っている間はタイマーを止める
                             bannerContainer.addEventListener('touchstart', () => {
+                                isTouching = true;
                                 clearInterval(bannerInterval);
                             }, { passive: true });
 
+                            // 指を離したら
                             bannerContainer.addEventListener('touchend', () => {
-                                // 少し待ってから再開
-                                if (bannerInterval) clearInterval(bannerInterval);
-                                bannerInterval = setInterval(scrollNext, 4000);
+                                isTouching = false;
+                                // 現在のスクロール位置から、今のインデックスを再計算して同期する
+                                setTimeout(() => {
+                                    const item = bannerContainer.querySelector('.banner-item');
+                                    const oneSlideWidth = item.offsetWidth + 16;
+                                    const scrollLeft = bannerContainer.scrollLeft;
+                                    
+                                    // 最も近いスライド番号を計算
+                                    currentSlideIndex = Math.round(scrollLeft / oneSlideWidth);
+                                    
+                                    // もしクローン位置で止まっていたら0に戻しておく
+                                    if (currentSlideIndex >= totalSlides) {
+                                        currentSlideIndex = 0;
+                                        bannerContainer.scrollTo({ left: 0, behavior: 'instant' });
+                                    }
+
+                                    // タイマー再開
+                                    if (bannerInterval) clearInterval(bannerInterval);
+                                    bannerInterval = setInterval(scrollToNext, 4000);
+                                }, 500); // スナップが終わるのを少し待つ
                             }, { passive: true });
                         }
+                        // ▲▲▲ 修正ここまで ▲▲▲
 
                         // --- ▼▼▼ ホーム画面リスト描画の修正 ▼▼▼ ---
                         const countdownContainer = $('#countdown-list');
