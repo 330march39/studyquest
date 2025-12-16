@@ -834,11 +834,8 @@
                 </header>
         
             <div class="relative w-full aspect-[3/2] overflow-hidden rounded-2xl mb-6 shadow-sm bg-gray-100 dark:bg-gray-800">
-                <div id="banner-track" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide h-full items-center py-2">
-                    <div class="flex-shrink-0 w-[7.5%]"></div>
-                    
-                    <div class="flex-shrink-0 w-[4%]"></div>
-                </div>
+                <div id="banner-track" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide h-full items-center py-2 px-[7.5%] box-content">
+                    </div>
             </div>
             <div id="date-display" class="text-gray-500 dark:text-gray-400 text-sm font-bold mb-1"></div>
                 
@@ -5620,23 +5617,24 @@
             function initBanner() {
                 if (!bannerTrack || bannerImages.length === 0) return;
             
-                // 既存のコンテンツをクリア（余白用ダミーは残す必要があるため注意深く挿入）
-                const spacerStart = bannerTrack.firstElementChild;
-                const spacerEnd = bannerTrack.lastElementChild;
+                // 中身を完全にリセット
                 bannerTrack.innerHTML = '';
-                bannerTrack.appendChild(spacerStart);
             
                 // 画像アイテムの生成
                 bannerImages.forEach((src, index) => {
                     const item = document.createElement('div');
-                    // w-[85%]: 画面幅の85%を占有（残りで前後が見える）
-                    // snap-center: この要素の中央にスクロール位置が合う
-                    item.className = 'snap-center flex-shrink-0 w-[85%] h-full rounded-xl overflow-hidden mx-2 relative shadow-sm transition-transform';
-                    item.innerHTML = `<img src="${src}" alt="banner ${index + 1}" class="w-full h-full object-cover">`;
+                    // w-[85%] で横幅を指定し、flex-shrink-0 で縮小を防止
+                    // mx-2 で画像同士の隙間を作ります
+                    item.className = 'snap-center flex-shrink-0 w-[100%] h-full rounded-xl overflow-hidden mx-2 relative shadow-sm transition-transform bg-gray-200';
+                    
+                    // ※重要: w-[100%] にしていますが、親の bannerTrack に px-[7.5%] があるため、
+                    // 実際には画面幅の85%程度に見えるよう調整されます (CSSの書き方により微調整が必要な場合あり)
+                    // ここでは「スマホで見切れさせる」ために幅を固定します。
+                    item.style.width = '85%'; 
+
+                    item.innerHTML = `<img src="${src}" alt="banner ${index + 1}" class="w-full h-full object-cover pointer-events-none select-none">`;
                     bannerTrack.appendChild(item);
                 });
-            
-                bannerTrack.appendChild(spacerEnd);
             
                 // 自動スクロール開始
                 startBannerAutoScroll();
@@ -5646,31 +5644,32 @@
                 bannerTrack.addEventListener('scroll', () => {
                     stopBannerAutoScroll();
                     clearTimeout(isScrolling);
-                    // スクロール操作終了から2秒後に再開
-                    isScrolling = setTimeout(startBannerAutoScroll, 2000);
+                    // スクロール操作終了から3秒後に再開
+                    isScrolling = setTimeout(startBannerAutoScroll, 3000);
                 }, { passive: true });
             
+                // タッチ開始時にも停止
                 bannerTrack.addEventListener('touchstart', stopBannerAutoScroll, { passive: true });
                 bannerTrack.addEventListener('mousedown', stopBannerAutoScroll);
             }
             
             function startBannerAutoScroll() {
-                stopBannerAutoScroll(); // 二重起動防止
+                stopBannerAutoScroll(); // 重複防止
                 bannerAutoScrollTimer = setInterval(() => {
                     if (!bannerTrack) return;
             
-                    // 現在のスクロール位置から、次のアイテムの中心までの距離を計算
-                    const currentScrollLeft = bannerTrack.scrollLeft;
                     const trackWidth = bannerTrack.clientWidth;
                     const scrollWidth = bannerTrack.scrollWidth;
+                    const currentScrollLeft = bannerTrack.scrollLeft;
                     
-                    // アイテムの幅（マージン含む概算）
-                    const itemWidth = trackWidth * 0.85 + 16; // 85%幅 + mx-2(16px)
+                    // 1枚分の幅（概算：画面幅 * 0.85 + 余白）
+                    const itemWidth = trackWidth * 0.85; 
             
+                    // 次のスクロール位置
                     let nextScrollLeft = currentScrollLeft + itemWidth;
             
-                    // 最後まで到達していたら最初に戻る
-                    if (nextScrollLeft >= scrollWidth - trackWidth / 2) {
+                    // 最後まで行っていたら最初に戻る（遊びを持たせて判定）
+                    if (nextScrollLeft >= scrollWidth - (trackWidth / 2)) {
                          nextScrollLeft = 0;
                     }
             
@@ -5683,7 +5682,10 @@
             }
             
             function stopBannerAutoScroll() {
-                clearInterval(bannerAutoScrollTimer);
+                if (bannerAutoScrollTimer) {
+                    clearInterval(bannerAutoScrollTimer);
+                    bannerAutoScrollTimer = null;
+                }
             }
 
             const init = () => {
