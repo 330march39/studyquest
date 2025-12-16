@@ -4629,6 +4629,14 @@
                 return;
             }
 
+            quest.plan.forEach(item => {
+                // セクションで、かつテキストがない（またはスペースのみ）場合
+                if (item.type === 'section' && (!item.text || item.text.trim() === '')) {
+                    item.text = '新しいセクション';
+                }
+            });
+            renderQuestPlan();
+
             // 1. 背景や変数の準備
             quest.active = true;
             quest.currentIndex = -1;
