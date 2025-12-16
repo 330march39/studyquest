@@ -4182,7 +4182,7 @@
 
             /* ▼▼▼ 追加: クエスト機能の関数群 ▼▼▼ */
 
-        // クエストプランのリストをレンダリングする関数
+        // クエストプランのリストをレンダリングする関数（ラベル削除・デザイン調整版）
         function renderQuestPlan() {
             questPlanListEl.innerHTML = '';
             
@@ -4200,29 +4200,26 @@
         
             quest.plan.forEach((item, index) => {
                 const itemEl = document.createElement('div');
-                // スワイプコンテナの設定（カードの隙間は mb-3 で確保）
+                // スワイプコンテナ
                 itemEl.className = 'swipe-container relative overflow-hidden rounded-xl mb-3 shadow-sm group';
-                // 並び替え時のID識別用
                 itemEl.setAttribute('data-id', item.id);
         
                 let iconHTML = '';
                 let mainContentHTML = '';
-                let colorClass = '';
         
                 if (item.type === 'section') {
                     // === 学習セクション ===
-                    // 数字アイコン (LINE Seed JPフォント指定)
+                    // アイコン（数字）
                     iconHTML = `
                         <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center border border-indigo-100 dark:border-indigo-800/50">
                             <span class="text-xl font-bold text-indigo-600 dark:text-indigo-400" style="font-family: 'LINE Seed JP', sans-serif;">${sectionCounter}</span>
                         </div>
                     `;
                     
-                    // テキスト入力エリア
+                    // テキスト入力エリア（ラベル削除、フォント調整）
                     mainContentHTML = `
-                        <p class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 mb-0.5">CONTENT</p>
                         <input type="text" value="${item.text}" data-original-id="${item.originalTaskId || ''}" 
-                            class="quest-item-text w-full bg-transparent font-bold text-gray-800 dark:text-gray-200 text-sm focus:outline-none border-b border-transparent focus:border-indigo-500 placeholder-gray-300 transition-colors" 
+                            class="quest-item-text w-full bg-transparent font-bold text-gray-800 dark:text-gray-200 text-lg focus:outline-none border-b border-transparent focus:border-indigo-500 placeholder-gray-300 transition-colors py-1" 
                             placeholder="タスクを入力">
                     `;
                     
@@ -4235,13 +4232,15 @@
                         </div>
                     `;
                     
+                    // 休憩は固定テキスト（ラベル削除）
                     mainContentHTML = `
-                        <p class="text-[10px] font-bold text-green-500 dark:text-green-400 mb-0.5">BREAK</p>
-                        <p class="font-bold text-gray-500 dark:text-gray-400 text-sm">ブレイクタイム</p>
+                        <div class="flex items-center h-full">
+                            <span class="font-bold text-gray-500 dark:text-gray-400 text-lg">ブレイクタイム</span>
+                        </div>
                     `;
                 }
         
-                // 全体のHTML構造
+                // 全体のHTML構造（MINラベル削除）
                 itemEl.innerHTML = `
                     <div class="swipe-actions">
                         <div class="flex-grow"></div>
@@ -4253,24 +4252,22 @@
         
                     <div class="swipe-content flex items-center bg-white dark:bg-gray-800 p-3 relative z-10 w-full border border-gray-200 dark:border-gray-700 rounded-xl">
                         
-                        <div class="mr-3">
+                        <div class="mr-4">
                             ${iconHTML}
                         </div>
         
-                        <div class="flex-grow min-w-0 mr-3">
+                        <div class="flex-grow min-w-0 mr-4">
                             ${mainContentHTML}
                         </div>
         
-                        <div class="flex flex-col items-end mr-3 pl-3 border-l border-gray-100 dark:border-gray-700">
-                            <p class="text-[10px] font-bold text-gray-400 mb-1">MIN</p>
-                            <div class="relative">
-                                <input type="number" value="${item.duration / 60}" 
-                                    class="quest-item-duration w-14 p-1 pl-2 pr-6 bg-gray-100 dark:bg-gray-700 rounded-lg text-center font-bold text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
-                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 pointer-events-none">分</span>
-                            </div>
+                        <div class="flex items-center space-x-1 mr-3 pl-3 border-l border-gray-100 dark:border-gray-700 h-10">
+                            <input type="number" value="${item.duration / 60}" 
+                                class="quest-item-duration w-12 bg-transparent text-center font-bold text-lg text-gray-800 dark:text-gray-200 focus:outline-none focus:border-b-2 focus:border-indigo-500 transition-colors p-0"
+                            >
+                            <span class="text-xs text-gray-400 font-bold mt-1">分</span>
                         </div>
         
-                        <button class="quest-handle p-2 text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 cursor-grab active:cursor-grabbing touch-none transition-colors">
+                        <button class="quest-handle p-2 text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 cursor-grab active:cursor-grabbing touch-none transition-colors -mr-2">
                             <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                         </button>
                     </div>
@@ -4278,16 +4275,15 @@
                 
                 questPlanListEl.appendChild(itemEl);
         
-                // ★スワイプ機能の適用 (既存のSwipeHandlerクラスを使用)
+                // スワイプ機能
                 new SwipeHandler(itemEl, {
                     onDelete: () => {
                         quest.plan = quest.plan.filter(p => p.id !== item.id);
-                        // アニメーション完了を待って再描画
                         setTimeout(renderQuestPlan, 300);
                     }
                 });
         
-                // イベントリスナー設定
+                // イベントリスナー
                 const textInput = itemEl.querySelector('.quest-item-text');
                 if (textInput) {
                     textInput.addEventListener('change', (e) => {
@@ -4299,7 +4295,7 @@
                 const durationInput = itemEl.querySelector('.quest-item-duration');
                 durationInput.addEventListener('change', (e) => {
                     let val = parseInt(e.target.value);
-                    if (val < 1) val = 1; // 最小1分
+                    if (val < 1) val = 1;
                     item.duration = val * 60;
                 });
             });
@@ -4438,6 +4434,28 @@
                 };
             }
 
+            // タイトルをパースして表示するヘルパー関数
+            // スペース（全角・半角）で区切って、以降をサブタイトルとして表示
+            const updateQuestTitleDisplay = (text) => {
+                // 最初のスペースを探して分割
+                const match = text.match(/^(.+?)[\s　]+(.+)$/);
+                
+                if (match) {
+                    // 分割できた場合：メインとサブに分ける
+                    const main = match[1];
+                    const sub = match[2];
+                    questSectionTitle.innerHTML = `
+                        <div class="flex flex-col items-center animate-fadeIn">
+                            <span class="text-3xl md:text-4xl font-bold mb-2 leading-tight">${main}</span>
+                            <span class="text-lg md:text-xl text-gray-400 font-medium opacity-90">${sub}</span>
+                        </div>
+                    `;
+                } else {
+                    // 分割できない場合：そのまま表示
+                    questSectionTitle.textContent = text;
+                }
+            };
+
             // 実際のタイマー画面を表示して開始
             function executeQuestStep(currentStep) {
                 cancelQuestAlarm();
@@ -4467,7 +4485,7 @@
                     questSectionView.style.display = 'flex';
                     questBreakView.style.display = 'none';
                     
-                    questSectionTitle.textContent = currentStep.text;
+                    updateQuestTitleDisplay(currentStep.text);
                     // 進捗表示
                     const totalSections = quest.plan.filter(p => p.type === 'section').length;
                     const currentSectionNumber = quest.plan.slice(0, quest.currentIndex + 1).filter(p => p.type === 'section').length;
@@ -5456,7 +5474,7 @@
                     playBGM();
                     questSectionView.style.display = 'flex';
                     questBreakView.style.display = 'none';
-                    questSectionTitle.textContent = step.text;
+                    updateQuestTitleDisplay(step.text);
                     const totalSections = quest.plan.filter(p => p.type === 'section').length;
                     const currentSectionNumber = quest.plan.slice(0, quest.currentIndex + 1).filter(p => p.type === 'section').length;
                     questProgressEl.textContent = `${currentSectionNumber} / ${totalSections}`;
