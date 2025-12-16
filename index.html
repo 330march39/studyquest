@@ -800,45 +800,60 @@
             border-bottom: 2px solid var(--primary-color);
         }
         
-        /* ▼▼▼ バナー用CSS（変更なし：確認用） ▼▼▼ */
+        /* ▼▼▼ 修正: バナー用CSS (影切れ対策・パディング追加版) ▼▼▼ */
         .banner-wrapper {
             width: 100vw; 
             margin-left: calc(50% - 50vw);
             margin-right: calc(50% - 50vw);
             overflow: hidden;
+            /* パディング分を含めた高さを確保する（必要に応じて微調整してください） */
+            padding-bottom: 10px; 
         }
+
         .banner-carousel {
             display: flex;
             overflow-x: auto;
             overflow-y: hidden;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
-            padding: 0 7.5%; /* これで中央揃えになります */
+            
+            /* ▼ 変更点: 上下(24px)に余白を与えて影が見切れないようにする ▼ */
+            padding: 24px 7.5%; 
+            
             gap: 16px;
             width: 100%;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
         .banner-carousel::-webkit-scrollbar { display: none; }
+
         .banner-item {
             flex: 0 0 85%;
             aspect-ratio: 3 / 2;
             scroll-snap-align: center;
             border-radius: 1rem;
-            overflow: hidden;
+            overflow: visible; /* 念のためvisibleに */
             position: relative;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            
+            /* 影を少し強めにし、y方向のオフセットを増やす */
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.25);
+            
             display: flex;
             align-items: center;
             justify-content: center;
+            background-color: #fff; /* 画像読み込み前の背景 */
         }
+        
+        /* 画像自体の角丸はここで制御 */
         .banner-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 1rem; /* 親のoverflow:visible対策でimgに角丸をつける */
             pointer-events: none;
             user-select: none;
         }
+        /* ▲▲▲ 修正ここまで ▲▲▲ */
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -2629,52 +2644,79 @@
                         const today = new Date();
                         $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]})`;
 
-                        // ▼▼▼ 修正版: 完全無限ループ＆スムーズスクロール処理 ▼▼▼
+                        // ▼▼▼ 修正版: 高速スクロール対応・完全ループ処理 ▼▼▼
                         const bannerContainer = document.getElementById('home-banner-carousel');
                         
-                        // 初期化チェック & 実行
                         if (bannerContainer && !bannerContainer.dataset.initialized) {
                             bannerContainer.dataset.initialized = 'true';
 
                             const originalBanners = initialData.banners || [];
                             if (originalBanners.length === 0) return;
 
-                            // 1. HTML生成： [最後のClone] + [本物たち] + [最初のClone]
-                            // これにより、左端に行くと「最後」が見え、右端に行くと「最初」が見える
-                            const firstClone = `
-                                <div class="banner-item">
-                                    <img src="${originalBanners[0].url}" alt="banner" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${originalBanners[0].id}'">
-                                </div>`;
-                            
-                            const lastClone = `
-                                <div class="banner-item">
-                                    <img src="${originalBanners[originalBanners.length - 1].url}" alt="banner" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${originalBanners[originalBanners.length - 1].id}'">
-                                </div>`;
+                            const count = originalBanners.length;
 
-                            const originalsHTML = originalBanners.map(b => `
+                            // 1. HTML生成: [Clone Set(前)] + [Original Set(本物)] + [Clone Set(後)]
+                            // これにより、前後どちらに高速スワイプしてもバッファがある状態にする
+                            const createItemsHTML = (items) => items.map(b => `
                                 <div class="banner-item">
                                     <img src="${b.url}" alt="banner" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
                                 </div>
                             `).join('');
 
-                            bannerContainer.innerHTML = lastClone + originalsHTML + firstClone;
+                            // 全セットを3回繰り返す
+                            bannerContainer.innerHTML = 
+                                createItemsHTML(originalBanners) + // 前クローン (Index 0 ~ count-1)
+                                createItemsHTML(originalBanners) + // 本物 (Index count ~ 2*count-1)
+                                createItemsHTML(originalBanners);  // 後クローン (Index 2*count ~ )
 
                             // 2. 初期位置の設定
-                            // 左端には「最後のClone」がいるので、インデックス1（本物の最初）からスタートする
-                            let currentSlideIndex = 1; 
-                            const totalItems = originalBanners.length + 2; // Clone2つ分を含む
-
-                            // 画像読み込み待ち等のズレ防止のため少し遅延させて位置合わせ
+                            // 真ん中のセットの先頭 (index = count) に合わせる
+                            let currentSlideIndex = count;
+                            
+                            // 描画安定後に位置合わせ
                             setTimeout(() => {
                                 const item = bannerContainer.querySelector('.banner-item');
                                 if(item) {
-                                    const oneSlideWidth = item.offsetWidth + 16; // 16 is gap
-                                    // アニメーションなし(instant)で本物の1枚目に移動
-                                    bannerContainer.scrollTo({ left: oneSlideWidth * currentSlideIndex, behavior: 'instant' });
+                                    // gap(16px) を考慮した1スライドの幅
+                                    const oneSlideWidth = item.offsetWidth + 16; 
+                                    bannerContainer.scrollTo({ 
+                                        left: oneSlideWidth * currentSlideIndex, 
+                                        behavior: 'instant' 
+                                    });
                                 }
-                            }, 10);
+                            }, 50); // 少し待ち時間を増やす
 
-                            // 3. 次へ進む関数
+                            // 3. ループ位置補正関数 (テレポート)
+                            const checkLoop = () => {
+                                const item = bannerContainer.querySelector('.banner-item');
+                                if(!item) return;
+                                const oneSlideWidth = item.offsetWidth + 16;
+                                const scrollLeft = bannerContainer.scrollLeft;
+                                
+                                // 現在のインデックスを計算
+                                let rawIndex = Math.round(scrollLeft / oneSlideWidth);
+
+                                // ■ 左のクローンゾーンに入りすぎたら -> 真ん中のセットへ
+                                if (rawIndex < count) {
+                                    currentSlideIndex = rawIndex + count;
+                                    bannerContainer.scrollTo({
+                                        left: currentSlideIndex * oneSlideWidth,
+                                        behavior: 'instant'
+                                    });
+                                }
+                                // ■ 右のクローンゾーンに入りすぎたら -> 真ん中のセットへ
+                                else if (rawIndex >= count * 2) {
+                                    currentSlideIndex = rawIndex - count;
+                                    bannerContainer.scrollTo({
+                                        left: currentSlideIndex * oneSlideWidth,
+                                        behavior: 'instant'
+                                    });
+                                } else {
+                                    currentSlideIndex = rawIndex;
+                                }
+                            };
+
+                            // 4. 自動スクロール関数
                             const scrollToNext = () => {
                                 const item = bannerContainer.querySelector('.banner-item');
                                 if(!item) return;
@@ -2682,68 +2724,47 @@
 
                                 currentSlideIndex++;
                                 
-                                // スムーズに次へ移動
                                 bannerContainer.scrollTo({
                                     left: currentSlideIndex * oneSlideWidth,
                                     behavior: 'smooth'
                                 });
 
-                                // もし「右端のClone（最初の画像のコピー）」まで来たら
-                                if (currentSlideIndex === totalItems - 1) {
-                                    // スクロールアニメーションが終わる頃(500ms後)に、
-                                    // こっそり「本物の最初（インデックス1）」に戻す
-                                    setTimeout(() => {
-                                        currentSlideIndex = 1;
-                                        bannerContainer.scrollTo({
-                                            left: currentSlideIndex * oneSlideWidth,
-                                            behavior: 'instant' // 瞬間移動
-                                        });
-                                    }, 500); // smoothスクロールの時間に合わせて調整
-                                }
+                                // スクロール完了後にループ判定を行う
+                                // (smoothスクロール中は座標が動いているため、終わった頃にチェック)
+                                setTimeout(checkLoop, 500); 
                             };
 
-                            // 4. 自動スクロールタイマー開始
+                            // 5. タイマー開始
                             if (bannerInterval) clearInterval(bannerInterval);
                             bannerInterval = setInterval(scrollToNext, 4000);
 
-                            // 5. 手動スワイプのループ制御（監視）
+                            // 6. ユーザー操作時の制御
                             let isTouching = false;
                             
                             bannerContainer.addEventListener('touchstart', () => {
                                 isTouching = true;
-                                clearInterval(bannerInterval); // 触っている間は自動停止
+                                clearInterval(bannerInterval);
                             }, { passive: true });
 
-                            // 指を離した後の位置補正（無限ループの要）
                             bannerContainer.addEventListener('touchend', () => {
                                 isTouching = false;
                                 
-                                // スナップアニメーションが終わるのを待つ
+                                // スワイプの慣性スクロールが終わるのを少し待ってから位置補正 & タイマー再開
                                 setTimeout(() => {
-                                    const item = bannerContainer.querySelector('.banner-item');
-                                    const oneSlideWidth = item.offsetWidth + 16;
-                                    const scrollLeft = bannerContainer.scrollLeft;
+                                    checkLoop(); // ここで位置ずれを直す
                                     
-                                    // 現在位置からインデックスを計算
-                                    let newIndex = Math.round(scrollLeft / oneSlideWidth);
-
-                                    // 左端のClone（最後の画像のコピー）に来ていたら
-                                    if (newIndex === 0) {
-                                        newIndex = totalItems - 2; // 本物の最後へ
-                                        bannerContainer.scrollTo({ left: newIndex * oneSlideWidth, behavior: 'instant' });
-                                    } 
-                                    // 右端のClone（最初の画像のコピー）に来ていたら
-                                    else if (newIndex === totalItems - 1) {
-                                        newIndex = 1; // 本物の最初へ
-                                        bannerContainer.scrollTo({ left: newIndex * oneSlideWidth, behavior: 'instant' });
-                                    }
-
-                                    currentSlideIndex = newIndex;
-
-                                    // タイマー再開
                                     if (bannerInterval) clearInterval(bannerInterval);
                                     bannerInterval = setInterval(scrollToNext, 4000);
-                                }, 500);
+                                }, 600); // 慣性が落ち着く時間
+                            }, { passive: true });
+                            
+                            // スクロールイベントでも監視（極端な高速スクロール対策）
+                            let scrollTimeout;
+                            bannerContainer.addEventListener('scroll', () => {
+                                if(isTouching) return; // 触ってる間は補正しない（ガタつき防止）
+                                
+                                clearTimeout(scrollTimeout);
+                                scrollTimeout = setTimeout(checkLoop, 100);
                             }, { passive: true });
                         }
                         // ▲▲▲ 修正ここまで ▲▲▲
