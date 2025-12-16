@@ -2644,7 +2644,7 @@
                         const today = new Date();
                         $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]})`;
 
-                        // ▼▼▼ 修正版: 高速スクロール完全対応・常時ループ監視処理 ▼▼▼
+                        // ▼▼▼ 修正版: 高速スクロール対応 (判定緩和版) ▼▼▼
                         const bannerContainer = document.getElementById('home-banner-carousel');
                         
                         if (bannerContainer && !bannerContainer.dataset.initialized) {
@@ -2653,88 +2653,85 @@
                             const originalBanners = initialData.banners || [];
                             if (originalBanners.length === 0) return;
 
-                            // 1. 画像生成関数
+                            const count = originalBanners.length;
+
+                            // 1. 画像生成 (5セット作成)
+                            // [Set 0] [Set 1] [Set 2(中心)] [Set 3] [Set 4]
                             const createItemsHTML = (items) => items.map(b => `
                                 <div class="banner-item">
                                     <img src="${b.url}" alt="banner" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
                                 </div>
                             `).join('');
 
-                            // 2. 5セット作成 [Set1][Set2][Set3(中心)][Set4][Set5]
-                            // これだけあれば、どんなに高速でフリックしても端には届きません
                             bannerContainer.innerHTML = 
                                 createItemsHTML(originalBanners) + 
                                 createItemsHTML(originalBanners) + 
-                                createItemsHTML(originalBanners) + // ここが初期位置
+                                createItemsHTML(originalBanners) + 
                                 createItemsHTML(originalBanners) + 
                                 createItemsHTML(originalBanners);
 
-                            // 変数定義
-                            const totalSets = 5;
-                            const centerSetIndex = 2; // 0始まりなので3番目はIndex 2
-                            const count = originalBanners.length;
-                            
-                            // 3. 座標計算用ヘルパー
-                            // 正確なセットの幅（画像幅総計 + gap総計）を取得
-                            const getSetWidth = () => {
+                            const centerSetIndex = 2; // 真ん中のセット (Set 2)
+
+                            // 2. 座標計算用ヘルパー
+                            const getOneSetWidth = () => {
                                 const item = bannerContainer.querySelector('.banner-item');
                                 if (!item) return 0;
-                                const gap = 16; // CSSのgap
+                                const gap = 16; 
                                 return (item.offsetWidth + gap) * count;
                             };
 
-                            // 4. 初期位置合わせ (真ん中のセットの先頭へ)
+                            // 3. 初期位置合わせ (真ん中のセットへ)
                             const jumpToCenter = () => {
-                                const setWidth = getSetWidth();
+                                const setWidth = getOneSetWidth();
                                 if (setWidth > 0) {
-                                    // アニメーションなしで瞬間移動
                                     bannerContainer.scrollTo({
                                         left: setWidth * centerSetIndex,
                                         behavior: 'instant'
                                     });
                                 }
                             };
-
-                            // 画像読み込み待ちも含めて初期位置セット
+                            
+                            // 描画待ち
                             setTimeout(jumpToCenter, 50);
-                            setTimeout(jumpToCenter, 300); // 念のため再実行
+                            setTimeout(jumpToCenter, 300);
 
-                            // 5. 【重要】スクロール監視による無限ループ（テレポート）
-                            // スクロールが発生するたびに位置をチェックし、
-                            // 中心セットから「1セット分」以上離れたら、即座に中心セットへ引き戻す
+                            // 4. 【重要】ループ監視 (判定を緩くする)
                             const onScroll = () => {
-                                const setWidth = getSetWidth();
+                                const setWidth = getOneSetWidth();
                                 if (setWidth === 0) return;
 
                                 const currentScroll = bannerContainer.scrollLeft;
-                                const centerPosition = setWidth * centerSetIndex;
+                                
+                                // 判定ライン:
+                                // 左側: Set 1 より左に行ったら (Set 0 に入りそうになったら)
+                                // 右側: Set 3 より右に行ったら (Set 4 に入りそうになったら)
+                                // これにより Set 1, 2, 3 の間 (画像数×3 の広大なエリア) は自由にスクロールできる
+                                
+                                const leftThreshold = setWidth * 0.5; // 左の限界付近
+                                const rightThreshold = setWidth * 3.5; // 右の限界付近
 
-                                // 右に行き過ぎた場合（Set4に入ったらSet3の同じ位置に戻す）
-                                if (currentScroll >= centerPosition + setWidth) {
-                                    bannerContainer.scrollLeft = currentScroll - setWidth;
+                                // 右に行き過ぎた場合 -> 2セット分戻す (Set 4 -> Set 2)
+                                if (currentScroll >= rightThreshold) {
+                                    bannerContainer.scrollLeft = currentScroll - (setWidth * 2);
                                 }
-                                // 左に行き過ぎた場合（Set2に入ったらSet3の同じ位置に戻す）
-                                else if (currentScroll <= centerPosition - setWidth) {
-                                    bannerContainer.scrollLeft = currentScroll + setWidth;
+                                // 左に行き過ぎた場合 -> 2セット分進める (Set 0 -> Set 2)
+                                else if (currentScroll <= leftThreshold) {
+                                    bannerContainer.scrollLeft = currentScroll + (setWidth * 2);
                                 }
                             };
 
-                            // 'scroll'イベントで監視（慣性スクロール中も発火し続ける）
                             bannerContainer.addEventListener('scroll', onScroll, { passive: true });
 
-
-                            // 6. 自動スクロール（タイマー）
+                            // 5. 自動スクロール
                             let isTouching = false;
                             
-                            // 1枚ずつ進む関数
                             const autoScroll = () => {
-                                if (isTouching) return; // 触ってたら動かさない
+                                if (isTouching) return;
 
                                 const item = bannerContainer.querySelector('.banner-item');
                                 if (!item) return;
                                 const oneSlideWidth = item.offsetWidth + 16;
 
-                                // 現在位置から「次のスナップポイント」を計算して移動
                                 const currentScroll = bannerContainer.scrollLeft;
                                 const nextScroll = Math.ceil(currentScroll / oneSlideWidth) * oneSlideWidth + oneSlideWidth;
                                 
@@ -2747,7 +2744,7 @@
                             if (bannerInterval) clearInterval(bannerInterval);
                             bannerInterval = setInterval(autoScroll, 4000);
 
-                            // 7. タッチ操作の制御
+                            // 6. タッチ制御
                             bannerContainer.addEventListener('touchstart', () => {
                                 isTouching = true;
                                 clearInterval(bannerInterval);
