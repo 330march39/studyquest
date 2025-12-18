@@ -854,6 +854,55 @@
             user-select: none;
         }
         /* ▲▲▲ 修正ここまで ▲▲▲ */
+        /* ▼▼▼ 追加: ようこそ画面のループスライドショー用CSS ▼▼▼ */
+        .welcome-slideshow {
+            position: relative;
+            width: 20rem;  /* w-80 (320px) */
+            height: 20rem; /* h-80 (320px) */
+            margin: 0 auto 3rem auto; /* 中央揃え + 下マージン(mb-12相当) */
+        }
+
+        .welcome-slide-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 画像全体を表示 */
+            opacity: 0;
+            /* 1周12秒（4秒×3枚）でループ */
+            animation: slideFadeLoop 12s infinite;
+        }
+
+        /* 2枚目、3枚目の開始時間をずらす */
+        .welcome-slide-item:nth-child(1) { animation-delay: 0s; }
+        .welcome-slide-item:nth-child(2) { animation-delay: 4s; }
+        .welcome-slide-item:nth-child(3) { animation-delay: 8s; }
+
+        /* 美しいフェード＆ズームのアニメーション定義 */
+        @keyframes slideFadeLoop {
+            0% { 
+                opacity: 0; 
+                transform: scale(0.96); /* 少し縮んだ状態から */
+            }
+            5% { 
+                opacity: 1; 
+                transform: scale(1);    /* ふわっと現れる */
+            }
+            33.33% { 
+                opacity: 1; 
+                transform: scale(1.02); /* 表示中はゆっくり拡大 */
+            }
+            38.33% { 
+                opacity: 0;             /* 次の画像と重なりながら消える */
+                transform: scale(1.05); 
+            }
+            100% { 
+                opacity: 0; 
+                transform: scale(1.05); 
+            }
+        }
+        /* ▲▲▲ 追加ここまで ▲▲▲ */
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -1090,12 +1139,12 @@
     </div>
 
     <div id="welcome-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-6 hidden">
-        <div class="mb-12 animate-fadeIn">
-            <img src="SQ_logo4.png" alt="Welcome" class="w-80 h-80 object-contain mx-auto block dark:hidden">
-
-            <img src="SQ_logo5.png" alt="Welcome Dark" class="w-80 h-80 object-contain mx-auto hidden dark:block">
+        
+        <div class="welcome-slideshow animate-fadeIn">
+            <img src="tutorial_1.png" class="welcome-slide-item" alt="Welcome 1" onerror="this.style.display='none'">
+            <img src="tutorial_2.png" class="welcome-slide-item" alt="Welcome 2" onerror="this.style.display='none'">
+            <img src="tutorial_3.png" class="welcome-slide-item" alt="Welcome 3" onerror="this.style.display='none'">
         </div>
-
         <div class="w-full max-w-xs space-y-4 animate-fadeIn" style="animation-delay: 0.3s; opacity: 0;">
             <button id="btn-start-new" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105">
                 初めての方はこちら
