@@ -4420,15 +4420,15 @@
                 else { showToast('通知が拒否されました。端末の設定アプリから変更できます。'); }
             });
             
-            // ▼▼▼ 修正版: タブ切り替え処理（新デザイン対応） ▼▼▼
+            // ▼▼▼ 修正版v2: タブ切り替え処理（色問題・アイコン消失問題を解決） ▼▼▼
             let isAnimating = false;
 
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
-                // クリックされた要素がアイコンやspanの場合があるので、ボタン自体を取得
                 const targetBtn = e.currentTarget;
                 const nextPageId = targetBtn.dataset.page;
                 const activePage = document.querySelector('.page.active');
                 
+                // 同じページなら何もしない（アニメーション中は連打防止）
                 if ((activePage && activePage.id === nextPageId) || isAnimating) return;
 
                 const nextPage = $(`#${nextPageId}`);
@@ -4438,35 +4438,45 @@
 
                 // --- 1. UI（タブの見た目）の更新 ---
                 $$('.tab-btn').forEach(b => {
-                    // 全てのタブからアクティブクラスを削除
-                    b.classList.remove('active-tab');
-                    b.classList.remove('text-primary'); // 古いクラスがあれば
-                    b.classList.add('text-gray-400'); // 非アクティブ色
+                    // ★ここが重要: ボタンの種類によってリセット処理を分ける
                     
-                    // 真ん中のボタンの場合
                     if (b.classList.contains('center-fab')) {
-                        // 特に色を変える必要はないが、アニメーションなどをリセット
+                        // 【集中ボタンの場合】
+                        // 色は常に白 (text-white) なので変更しない
+                        // 変形アニメーションのリセットのみ行う
                         b.style.transform = '';
+                    } else {
+                        // 【通常ボタンの場合】
+                        // アクティブ色(primary-text)を削除し、非アクティブ色(text-gray-400)に戻す
+                        b.classList.remove('primary-text');
+                        b.classList.add('text-gray-400');
+                        
+                        // アイコンの塗りつぶしスタイルなどがあればここで解除
+                        // b.querySelector('svg').style.fill = 'none'; 
                     }
                 });
 
-                // クリックされたタブをアクティブにする
-                targetBtn.classList.remove('text-gray-400');
-                targetBtn.classList.add('active-tab');
-                
-                // 真ん中のボタンが押された場合のエフェクト
+                // --- 2. 選択されたボタンのアクティブ化 ---
                 if (targetBtn.classList.contains('center-fab')) {
-                    // 少し跳ねるようなエフェクト
+                    // 【集中ボタンが押された時】
+                    // 色は変えずに、アニメーション（跳ねる動き）だけ実行
                     targetBtn.animate([
                         { transform: 'translateX(-50%) scale(0.9)' },
                         { transform: 'translateX(-50%) scale(1.1)' },
                         { transform: 'translateX(-50%) scale(1)' }
                     ], { duration: 300, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
+                    
+                } else {
+                    // 【通常ボタンが押された時】
+                    // グレーを削除し、テーマカラー(primary-text)を適用
+                    targetBtn.classList.remove('text-gray-400');
+                    targetBtn.classList.add('primary-text');
                 }
 
+                // ヘッダータイトルの更新
                 $('#header-title').textContent = targetBtn.dataset.title;
 
-                // --- 2. ページ切り替えアニメーション (ここは既存ロジックと同じでOK) ---
+                // --- 3. ページ切り替えアニメーション (変更なし) ---
                 isAnimating = true;
 
                 if (activePage) {
@@ -4480,6 +4490,7 @@
 
                 nextPage.classList.add('page-enter');
 
+                // 描画負荷分散のための遅延処理
                 requestAnimationFrame(() => {
                     setTimeout(() => {
                         if (renderEngine.pages[nextPageId]) { 
