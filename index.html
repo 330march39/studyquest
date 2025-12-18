@@ -1251,7 +1251,7 @@
         <div class="relative flex justify-between items-end h-16 px-2">
             
             <div class="flex-1 flex justify-around items-center h-full">
-                <button class="tab-btn active-tab flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="home-page" data-title="ホーム">
+                <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text transition-colors" data-page="home-page" data-title="ホーム">
                     <i data-lucide="home" class="w-6 h-6 mb-0.5"></i>
                     <span class="text-[10px] font-bold">ホーム</span>
                 </button>
@@ -1262,7 +1262,42 @@
             </div>
 
             <div class="w-16 flex-shrink-0 h-full relative">
-                <button class="center-fab primary-bg text-white tab-btn" data-page="focus-page" data-title="集中">
+                <button class="center-fab primary-bg text-white tab-btn shadow-lg" data-page="focus-page" data-title="集中">
+                    <i data-lucide="timer" class="w-8 h-8"></i>
+                </button>
+                
+                <div class="absolute bottom-1 w-full text-center pointer-events-none">
+                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-400">集中</span>
+                </div>
+            </div>
+
+            <div class="flex-1 flex justify-around items-center h-full">
+                <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="my-chart-page" data-title="レポート">
+                    <i data-lucide="bar-chart-2" class="w-6 h-6 mb-0.5"></i>
+                    <span class="text-[10px] font-bold">レポート</span>
+                </button>
+                <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="settings-page" data-title="設定">
+                    <i data-lucide="settings" class="w-6 h-6 mb-0.5"></i>
+                    <span class="text-[10px] font-bold">設定</span>
+                </button>
+            </div>
+        </div>
+    </nav><nav id="bottom-nav" class="pb-safe">
+        <div class="relative flex justify-between items-end h-16 px-2">
+            
+            <div class="flex-1 flex justify-around items-center h-full">
+                <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text transition-colors" data-page="home-page" data-title="ホーム">
+                    <i data-lucide="home" class="w-6 h-6 mb-0.5"></i>
+                    <span class="text-[10px] font-bold">ホーム</span>
+                </button>
+                <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="study-page" data-title="学習">
+                    <i data-lucide="book-marked" class="w-6 h-6 mb-0.5"></i>
+                    <span class="text-[10px] font-bold">学習</span>
+                </button>
+            </div>
+
+            <div class="w-16 flex-shrink-0 h-full relative">
+                <button class="center-fab primary-bg text-white tab-btn shadow-lg" data-page="focus-page" data-title="集中">
                     <i data-lucide="timer" class="w-8 h-8"></i>
                 </button>
                 
@@ -4420,7 +4455,7 @@
                 else { showToast('通知が拒否されました。端末の設定アプリから変更できます。'); }
             });
             
-            // ▼▼▼ 修正版v2: タブ切り替え処理（色問題・アイコン消失問題を解決） ▼▼▼
+            // ▼▼▼ 修正版v3: 色制御を厳格化したタブ切り替え処理 ▼▼▼
             let isAnimating = false;
 
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
@@ -4428,7 +4463,7 @@
                 const nextPageId = targetBtn.dataset.page;
                 const activePage = document.querySelector('.page.active');
                 
-                // 同じページなら何もしない（アニメーション中は連打防止）
+                // 連打防止
                 if ((activePage && activePage.id === nextPageId) || isAnimating) return;
 
                 const nextPage = $(`#${nextPageId}`);
@@ -4436,30 +4471,26 @@
 
                 $('main').scrollTop = 0;
 
-                // --- 1. UI（タブの見た目）の更新 ---
+                // --- 1. 全ボタンの状態をリセット（非アクティブ化） ---
                 $$('.tab-btn').forEach(b => {
-                    // ★ここが重要: ボタンの種類によってリセット処理を分ける
-                    
+                    // 真ん中のボタン (center-fab) の場合
                     if (b.classList.contains('center-fab')) {
-                        // 【集中ボタンの場合】
-                        // 色は常に白 (text-white) なので変更しない
-                        // 変形アニメーションのリセットのみ行う
-                        b.style.transform = '';
-                    } else {
-                        // 【通常ボタンの場合】
-                        // アクティブ色(primary-text)を削除し、非アクティブ色(text-gray-400)に戻す
-                        b.classList.remove('primary-text');
+                        // 色クラスがつかないように掃除し、必ず白文字にする
+                        b.classList.remove('primary-text', 'text-gray-400', 'text-black', 'text-gray-900');
+                        b.classList.add('text-white'); 
+                        b.style.transform = ''; // アニメーションリセット
+                    } 
+                    // 通常のタブボタンの場合
+                    else {
+                        // テーマ色(primary-text)を消し、グレー(text-gray-400)に戻す
+                        b.classList.remove('primary-text', 'active-tab');
                         b.classList.add('text-gray-400');
-                        
-                        // アイコンの塗りつぶしスタイルなどがあればここで解除
-                        // b.querySelector('svg').style.fill = 'none'; 
                     }
                 });
 
-                // --- 2. 選択されたボタンのアクティブ化 ---
+                // --- 2. クリックされたボタンをアクティブ化 ---
                 if (targetBtn.classList.contains('center-fab')) {
-                    // 【集中ボタンが押された時】
-                    // 色は変えずに、アニメーション（跳ねる動き）だけ実行
+                    // 【集中ボタン】色は変えずに、バウンドアニメーションのみ実行
                     targetBtn.animate([
                         { transform: 'translateX(-50%) scale(0.9)' },
                         { transform: 'translateX(-50%) scale(1.1)' },
@@ -4467,22 +4498,20 @@
                     ], { duration: 300, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
                     
                 } else {
-                    // 【通常ボタンが押された時】
-                    // グレーを削除し、テーマカラー(primary-text)を適用
+                    // 【通常タブ】グレーを消して、テーマカラーをつける
                     targetBtn.classList.remove('text-gray-400');
-                    targetBtn.classList.add('primary-text');
+                    targetBtn.classList.add('primary-text', 'active-tab');
                 }
 
-                // ヘッダータイトルの更新
+                // ヘッダータイトル更新
                 $('#header-title').textContent = targetBtn.dataset.title;
 
-                // --- 3. ページ切り替えアニメーション (変更なし) ---
+                // --- 3. ページ遷移アニメーション (変更なし) ---
                 isAnimating = true;
 
                 if (activePage) {
                     activePage.classList.add('page-exit');
                     activePage.classList.remove('active');
-                    
                     activePage.addEventListener('animationend', () => {
                         activePage.classList.remove('page-exit');
                     }, { once: true });
@@ -4490,12 +4519,13 @@
 
                 nextPage.classList.add('page-enter');
 
-                // 描画負荷分散のための遅延処理
+                // 描画負荷分散
                 requestAnimationFrame(() => {
                     setTimeout(() => {
                         if (renderEngine.pages[nextPageId]) { 
                             renderEngine.pages[nextPageId](); 
                         }
+                        // 集中ページならミニタイマーを表示しない判定
                         if (nextPageId === 'focus-page') {
                             miniTimerTemporarilyHidden = false;
                         }
@@ -4509,7 +4539,6 @@
                     nextPage.classList.add('active');
                     isAnimating = false;
                 }, { once: true });
-
             }));
             // ▲▲▲ 修正ここまで ▲▲▲
 
