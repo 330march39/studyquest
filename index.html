@@ -854,13 +854,17 @@
             user-select: none;
         }
         /* ▲▲▲ 修正ここまで ▲▲▲ */
-        /* ▼▼▼ 修正版: ようこそ画面のスライドショー (ロゴ+3枚=計4枚構成) ▼▼▼ */
+        /* ▼▼▼ 修正版: スマホ中央揃え・画像サイズ個別調整・ボタン位置調整 ▼▼▼ */
         .welcome-slideshow {
             position: relative;
-            /* 画像サイズを大きく変更 (20rem -> 24rem) */
-            width: 24rem;  
-            height: 24rem; 
-            margin: 0 auto 2rem auto; /* 下マージンを少し調整 */
+            
+            /* --- 1. スマホでの中央揃えとサイズ拡大 --- */
+            width: 85vw;        /* 画面幅の85%を使う（これでスマホでも中央維持） */
+            max-width: 26rem;   /* ただしPC等では大きくなりすぎないように上限設定 */
+            aspect-ratio: 1 / 1; /* 正方形を維持 */
+            
+            /* --- 3. ボタン群を下げるための余白 --- */
+            margin: 0 auto 4rem auto; /* 下マージンを 2rem -> 4rem に倍増 */
         }
 
         .welcome-slide-item {
@@ -869,57 +873,36 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain; /* アスペクト比を維持して全体を表示 */
+            object-fit: contain;
             opacity: 0;
-            /* 1周16秒（4秒×4枚）でループ */
             animation: slideFadeLoop4 16s infinite;
         }
 
-        /* --- 登場タイミングの調整 --- */
+        /* --- 2. 画像ごとのサイズ調整 --- */
         
-        /* 1枚目: ロゴ (ライト/ダーク両方とも開始時間は0秒) */
+        /* チュートリアル用: コンテナいっぱいに表示（大きく） */
+        .slide-tutorial {
+            padding: 0; 
+        }
+
+        /* ロゴ用: 余白を入れて見た目のサイズを抑える（従来サイズを維持） */
+        .slide-logo {
+            padding: 4rem; /* 画像の周りに余白を作ることで小さく表示させる */
+        }
+
+        /* --- アニメーションタイミング（変更なし） --- */
         .welcome-slide-item:nth-child(1),
-        .welcome-slide-item:nth-child(2) { 
-            animation-delay: 0s; 
-        }
-        
-        /* 2枚目: Tutorial 1 (4秒後) */
-        .welcome-slide-item:nth-child(3) { 
-            animation-delay: 4s; 
-        }
-        
-        /* 3枚目: Tutorial 2 (8秒後) */
-        .welcome-slide-item:nth-child(4) { 
-            animation-delay: 8s; 
-        }
+        .welcome-slide-item:nth-child(2) { animation-delay: 0s; }
+        .welcome-slide-item:nth-child(3) { animation-delay: 4s; }
+        .welcome-slide-item:nth-child(4) { animation-delay: 8s; }
+        .welcome-slide-item:nth-child(5) { animation-delay: 12s; }
 
-        /* 4枚目: Tutorial 3 (12秒後) */
-        .welcome-slide-item:nth-child(5) { 
-            animation-delay: 12s; 
-        }
-
-        /* 4枚構成用のフェード＆ズームアニメーション定義 */
         @keyframes slideFadeLoop4 {
-            0% { 
-                opacity: 0; 
-                transform: scale(0.96); 
-            }
-            4% { /* ふわっと出現 */
-                opacity: 1; 
-                transform: scale(1); 
-            }
-            21% { /* 表示維持＆拡大 */
-                opacity: 1; 
-                transform: scale(1.02); 
-            }
-            25% { /* フェードアウトして次へ */
-                opacity: 0;             
-                transform: scale(1.05); 
-            }
-            100% { 
-                opacity: 0; 
-                transform: scale(1.05); 
-            }
+            0% { opacity: 0; transform: scale(0.96); }
+            4% { opacity: 1; transform: scale(1); }
+            21% { opacity: 1; transform: scale(1.02); }
+            25% { opacity: 0; transform: scale(1.05); }
+            100% { opacity: 0; transform: scale(1.05); }
         }
         /* ▲▲▲ 修正ここまで ▲▲▲ */
     </style>
@@ -1161,15 +1144,12 @@
         
         <div class="welcome-slideshow animate-fadeIn">
             
-            <img src="SQ_logo4.png" class="welcome-slide-item block dark:hidden" alt="Logo Light">
-            
-            <img src="SQ_logo5.png" class="welcome-slide-item hidden dark:block" alt="Logo Dark">
+            <img src="SQ_logo4.png" class="welcome-slide-item slide-logo block dark:hidden" alt="Logo Light">
+            <img src="SQ_logo5.png" class="welcome-slide-item slide-logo hidden dark:block" alt="Logo Dark">
 
-            <img src="tutorial_1.png" class="welcome-slide-item" alt="Tutorial 1" onerror="this.style.display='none'">
-            
-            <img src="tutorial_2.png" class="welcome-slide-item" alt="Tutorial 2" onerror="this.style.display='none'">
-            
-            <img src="tutorial_3.png" class="welcome-slide-item" alt="Tutorial 3" onerror="this.style.display='none'">
+            <img src="tutorial_1.png" class="welcome-slide-item slide-tutorial" alt="Tutorial 1" onerror="this.style.display='none'">
+            <img src="tutorial_2.png" class="welcome-slide-item slide-tutorial" alt="Tutorial 2" onerror="this.style.display='none'">
+            <img src="tutorial_3.png" class="welcome-slide-item slide-tutorial" alt="Tutorial 3" onerror="this.style.display='none'">
             
         </div>
         <div class="w-full max-w-xs space-y-4 animate-fadeIn" style="animation-delay: 0.3s; opacity: 0;">
