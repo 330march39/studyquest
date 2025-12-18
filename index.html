@@ -854,17 +854,19 @@
             user-select: none;
         }
         /* ▲▲▲ 修正ここまで ▲▲▲ */
-        /* ▼▼▼ 修正版: スマホ中央揃え・画像サイズ個別調整・ボタン位置調整 ▼▼▼ */
+        /* ▼▼▼ 修正版v2: サイズ定義の見直しと配置調整 ▼▼▼ */
         .welcome-slideshow {
             position: relative;
-            
-            /* --- 1. スマホでの中央揃えとサイズ拡大 --- */
-            width: 85vw;        /* 画面幅の85%を使う（これでスマホでも中央維持） */
-            max-width: 26rem;   /* ただしPC等では大きくなりすぎないように上限設定 */
+            /* スマホでは画面幅の90%を使用し、PCなどでは最大420pxまでとする */
+            width: 90%;
+            max-width: 420px; /* これにより以前より大きく表示されます */
             aspect-ratio: 1 / 1; /* 正方形を維持 */
             
-            /* --- 3. ボタン群を下げるための余白 --- */
-            margin: 0 auto 4rem auto; /* 下マージンを 2rem -> 4rem に倍増 */
+            /* 上下に余白を取り、中央揃えにする */
+            margin: 2rem auto 5rem auto; /* 下マージンを5remに増やしてボタンと離す */
+            
+            /* フレックスアイテムとしての配置を調整 */
+            flex-shrink: 0; 
         }
 
         .welcome-slide-item {
@@ -873,21 +875,26 @@
             left: 0;
             width: 100%;
             height: 100%;
+            /* 画像の配置方法を微調整 */
             object-fit: contain;
+            object-position: center;
+            
             opacity: 0;
             animation: slideFadeLoop4 16s infinite;
         }
 
-        /* --- 2. 画像ごとのサイズ調整 --- */
+        /* --- 画像ごとのサイズ微調整 --- */
         
-        /* チュートリアル用: コンテナいっぱいに表示（大きく） */
+        /* チュートリアル用: 余白なしで大きく表示 */
         .slide-tutorial {
             padding: 0; 
         }
 
-        /* ロゴ用: 余白を入れて見た目のサイズを抑える（従来サイズを維持） */
+        /* ロゴ用: 少しだけ余白を入れて、チュートリアルより少し小さく見せる */
+        /* 前回小さくなりすぎたので、パディングを減らしました (4rem -> 1.5rem) */
         .slide-logo {
-            padding: 4rem; /* 画像の周りに余白を作ることで小さく表示させる */
+            padding: 1.5rem; 
+            box-sizing: border-box; /* パディングをサイズ計算に含める */
         }
 
         /* --- アニメーションタイミング（変更なし） --- */
@@ -1143,15 +1150,14 @@
     <div id="welcome-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-6 hidden">
         
         <div class="welcome-slideshow animate-fadeIn">
-            
             <img src="SQ_logo4.png" class="welcome-slide-item slide-logo block dark:hidden" alt="Logo Light">
             <img src="SQ_logo5.png" class="welcome-slide-item slide-logo hidden dark:block" alt="Logo Dark">
 
             <img src="tutorial_1.png" class="welcome-slide-item slide-tutorial" alt="Tutorial 1" onerror="this.style.display='none'">
             <img src="tutorial_2.png" class="welcome-slide-item slide-tutorial" alt="Tutorial 2" onerror="this.style.display='none'">
             <img src="tutorial_3.png" class="welcome-slide-item slide-tutorial" alt="Tutorial 3" onerror="this.style.display='none'">
-            
         </div>
+
         <div class="w-full max-w-xs space-y-4 animate-fadeIn" style="animation-delay: 0.3s; opacity: 0;">
             <button id="btn-start-new" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105">
                 初めての方はこちら
