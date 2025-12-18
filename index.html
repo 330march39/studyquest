@@ -10,18 +10,13 @@
     <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)">
 
     <style>
-        /* 既存の html, body のスタイルを修正 */
+        /* 1. htmlとbodyに最初から背景色をつける (これが白飛び防止の鍵) */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
-            /* height: 100%; を以下に変更 */
-            height: 100dvh; 
-            /* 古いブラウザ対策で 100vh も残しておくとベター */
-            min-height: 100vh;
-            min-height: 100dvh;
-            
-            background-color: #ffffff;
+            height: 100%;
+            background-color: #ffffff; /* gray-100 (ライトモードの背景) */
             overscroll-behavior: none;
             touch-action: pan-y;
         }
@@ -575,30 +570,11 @@
             padding-bottom: env(safe-area-inset-bottom, 10px);
         }
         
-        /* 既存の .nav-safe を以下のように書き換えてください */
+        /* ナビゲーションバー専用: コンテンツ領域の高さを維持しつつ、パディングで背景を伸ばす */
         .nav-safe {
-            /* padding-bottom は JSで制御するため、基本はここで設定しつつクラスで上書きできるようにする */
-            padding-bottom: env(safe-area-inset-bottom, 20px);
-            height: auto; /* 高さは自動 */
-            min-height: 3.5rem; /* h-14 (56px) を最低確保 */
-            box-sizing: border-box; /* コンテンツボックスをやめる */
-            
-            /* フレックスの設定などは維持 */
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
+            padding-bottom: env(safe-area-inset-bottom, 10px);
+            box-sizing: content-box; /* これが重要: height:64pxの中にパディングを含めない設定 */
         }
-        
-        /* ★追加: キーボードが開いている（入力中）ときは、下の余白を強制的に0にするクラス */
-        body.keyboard-open .nav-safe {
-            padding-bottom: 0 !important;
-        }
-        
-        /* ★追加: 入力中はナビゲーションバー自体を隠してしまうのも一般的なPWAの解決策です（お好みで） */
-        /* body.keyboard-open nav {
-            display: none !important;
-        }
-        */
         
         /* 固定配置の要素を、セーフティエリア分だけ上に押し上げる */
         /* calc() を使って「元の位置 + セーフティエリア」を計算 */
@@ -6256,27 +6232,6 @@
                     });
                 });
             };
-
-            // --- キーボード表示対策 ---
-            // テキスト入力中は、下のセーフティエリアの余白を消すためのクラスをbodyに付与する
-            const handleFocusIn = (e) => {
-                const tag = e.target.tagName;
-                // input または textarea にフォーカスが当たった場合
-                if (tag === 'INPUT' || tag === 'TEXTAREA') {
-                    document.body.classList.add('keyboard-open');
-                }
-            };
-            
-            const handleFocusOut = (e) => {
-                const tag = e.target.tagName;
-                if (tag === 'INPUT' || tag === 'TEXTAREA') {
-                    document.body.classList.remove('keyboard-open');
-                }
-            };
-            
-            // イベントリスナーを全体に登録（キャプチャリングフェーズを使用）
-            document.addEventListener('focusin', handleFocusIn, true);
-            document.addEventListener('focusout', handleFocusOut, true);
 
             // ==========================================
             // ▼▼▼ アイテム詳細画面の制御 (SubPageクラス適用版) ▼▼▼
