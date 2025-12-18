@@ -5886,6 +5886,17 @@
                         }
                     });
                 }, { passive: true });
+
+                // システムのテーマ変更をリアルタイムで監視する
+                if (window.matchMedia) {
+                    const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                    colorSchemeQuery.addEventListener('change', (e) => {
+                        // OSのテーマが変わったら、アプリの見た目を再計算する
+                        // updateAppearance内で「デバイスに合わせる」設定かどうかが判定されるため、
+                        // ここでは無条件に呼び出すだけでOKです。
+                        updateAppearance();
+                    });
+                }
                 
                 loadState();
 
