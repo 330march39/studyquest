@@ -2650,134 +2650,126 @@
                         if (bannerInterval) clearInterval(bannerInterval);
 
                         if (bannerContainer) {
-                            // まだ初期化されていない、または中身が空の場合のみ描画
-                            if (!bannerContainer.dataset.initialized || bannerContainer.children.length === 0) {
-                                bannerContainer.dataset.initialized = 'true';
+                            // ★修正1: dataset.initialized のチェックを削除し、毎回セットアップするように変更
+                            
+                            const originalBanners = initialData.banners || [];
+                            if (originalBanners.length === 0) return;
 
-                                const originalBanners = initialData.banners || [];
-                                if (originalBanners.length === 0) return;
+                            // --- 1. HTML生成 (3セット構成) ---
+                            // 毎回リセットすることで、万が一崩れても正常な状態に戻ります
+                            const createItemsHTML = (items) => items.map(b => `
+                                <div class="banner-item">
+                                    <img src="${b.url}" alt="banner" style="width:100%; height:100%; object-fit:cover; border-radius:1rem; pointer-events:none;" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
+                                </div>
+                            `).join('');
 
-                                // --- 1. HTML生成 (3セット構成) ---
-                                const createItemsHTML = (items) => items.map(b => `
-                                    <div class="banner-item">
-                                        <img src="${b.url}" alt="banner" style="width:100%; height:100%; object-fit:cover; border-radius:1rem; pointer-events:none;" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
-                                    </div>
-                                `).join('');
+                            bannerContainer.innerHTML = 
+                                createItemsHTML(originalBanners) + 
+                                createItemsHTML(originalBanners) + 
+                                createItemsHTML(originalBanners);
 
-                                bannerContainer.innerHTML = 
-                                    createItemsHTML(originalBanners) + 
-                                    createItemsHTML(originalBanners) + 
-                                    createItemsHTML(originalBanners);
+                            // --- 2. 画像読み込み完了を待ってから計算・移動する ---
+                            const images = bannerContainer.querySelectorAll('img');
+                            let loadedCount = 0;
+                            
+                            const startCarousel = () => {
+                                const item = bannerContainer.querySelector('.banner-item');
+                                if (!item) return;
 
-                                // --- 2. 画像読み込み完了を待ってから計算・移動する ---
-                                const images = bannerContainer.querySelectorAll('img');
-                                let loadedCount = 0;
+                                // CSSの gap 値を取得して正確な1枚分の幅を出す
+                                const style = window.getComputedStyle(bannerContainer);
+                                const gap = parseFloat(style.gap) || 16; 
+                                const oneSlideWidth = item.offsetWidth + gap;
                                 
-                                const startCarousel = () => {
-                                    const item = bannerContainer.querySelector('.banner-item');
-                                    if (!item) return;
+                                // 1セット分の幅 (1枚の幅 × 枚数)
+                                const oneSetWidth = oneSlideWidth * originalBanners.length;
+                                
+                                // 初期位置：真ん中のセットの先頭へ
+                                bannerContainer.style.scrollBehavior = 'auto'; // 一瞬だけアニメなしにする
+                                bannerContainer.scrollLeft = oneSetWidth;
+                                bannerContainer.style.scrollBehavior = ''; // 元に戻す
 
-                                    // ★重要: CSSの gap 値を取得して正確な1枚分の幅を出す
-                                    const style = window.getComputedStyle(bannerContainer);
-                                    const gap = parseFloat(style.gap) || 16; 
-                                    const oneSlideWidth = item.offsetWidth + gap;
+                                // --- 3. ループ監視処理 ---
+                                const onScroll = () => {
+                                    const currentScroll = bannerContainer.scrollLeft;
                                     
-                                    // 1セット分の幅 (1枚の幅 × 枚数)
-                                    const oneSetWidth = oneSlideWidth * originalBanners.length;
-                                    
-                                    // 初期位置：真ん中のセットの先頭へ
-                                    bannerContainer.style.scrollBehavior = 'auto'; // 一瞬だけアニメなしにする
-                                    bannerContainer.scrollLeft = oneSetWidth;
-                                    bannerContainer.style.scrollBehavior = ''; // 元に戻す
-
-                                    // --- 3. ループ監視処理 ---
-                                    const onScroll = () => {
-                                        const currentScroll = bannerContainer.scrollLeft;
+                                    // 右端（3セット目）に入り込んだら -> 真ん中のセットへ戻す
+                                    if (currentScroll >= oneSetWidth * 2) {
+                                        bannerContainer.style.scrollSnapType = 'none';
+                                        bannerContainer.style.scrollBehavior = 'auto';
                                         
-                                        // 右端（3セット目）に入り込んだら -> 真ん中のセットへ戻す
-                                        if (currentScroll >= oneSetWidth * 2) {
-                                            // スナップを一時的に切る（これが中途半端に止まるのを防ぐ鍵）
-                                            bannerContainer.style.scrollSnapType = 'none';
-                                            bannerContainer.style.scrollBehavior = 'auto';
-                                            
-                                            // 座標リセット（現在のズレを維持したまま戻す）
-                                            bannerContainer.scrollLeft = currentScroll - oneSetWidth;
-                                            
-                                            // ★重要: ブラウザの描画サイクルを待ってからスナップを復帰させる
+                                        bannerContainer.scrollLeft = currentScroll - oneSetWidth;
+                                        
+                                        requestAnimationFrame(() => {
                                             requestAnimationFrame(() => {
-                                                requestAnimationFrame(() => {
-                                                    bannerContainer.style.scrollSnapType = '';
-                                                    bannerContainer.style.scrollBehavior = '';
-                                                });
+                                                bannerContainer.style.scrollSnapType = '';
+                                                bannerContainer.style.scrollBehavior = '';
                                             });
-                                        } 
-                                        // 左端（1セット目）に入り込んだら -> 真ん中のセットへ戻す
-                                        // ※判定を「1セット幅未満」にすることで、左スクロール時も早めに戻す
-                                        else if (currentScroll < oneSetWidth) {
-                                            bannerContainer.style.scrollSnapType = 'none';
-                                            bannerContainer.style.scrollBehavior = 'auto';
-                                            
-                                            bannerContainer.scrollLeft = currentScroll + oneSetWidth;
-                                            
+                                        });
+                                    } 
+                                    // 左端（1セット目）に入り込んだら -> 真ん中のセットへ戻す
+                                    else if (currentScroll < oneSetWidth) {
+                                        bannerContainer.style.scrollSnapType = 'none';
+                                        bannerContainer.style.scrollBehavior = 'auto';
+                                        
+                                        bannerContainer.scrollLeft = currentScroll + oneSetWidth;
+                                        
+                                        requestAnimationFrame(() => {
                                             requestAnimationFrame(() => {
-                                                requestAnimationFrame(() => {
-                                                    bannerContainer.style.scrollSnapType = '';
-                                                    bannerContainer.style.scrollBehavior = '';
-                                                });
+                                                bannerContainer.style.scrollSnapType = '';
+                                                bannerContainer.style.scrollBehavior = '';
                                             });
-                                        }
-                                    };
-
-                                    bannerContainer.addEventListener('scroll', onScroll, { passive: true });
-
-                                    // --- 4. 自動スクロール設定 ---
-                                    const setupAutoScroll = () => {
-                                        if (bannerInterval) clearInterval(bannerInterval);
-                                        bannerInterval = setInterval(() => {
-                                            // 「次の1枚」へスムーズに移動
-                                            // CSSスナップが効いているので、scrollByを使えば綺麗に吸着します
-                                            bannerContainer.scrollBy({ 
-                                                left: oneSlideWidth, 
-                                                behavior: 'smooth' 
-                                            });
-                                        }, 4000);
-                                    };
-
-                                    setupAutoScroll();
-
-                                    // タッチ操作中はタイマーを止める
-                                    let isTouching = false;
-                                    bannerContainer.addEventListener('touchstart', () => {
-                                        isTouching = true;
-                                        clearInterval(bannerInterval);
-                                    }, { passive: true });
-
-                                    bannerContainer.addEventListener('touchend', () => {
-                                        isTouching = false;
-                                        setupAutoScroll();
-                                    }, { passive: true });
+                                        });
+                                    }
                                 };
 
-                                // 画像ロード監視
-                                if (images.length === 0) {
-                                    startCarousel();
-                                } else {
-                                    images.forEach(img => {
-                                        if (img.complete) {
+                                // ★修正2: addEventListenerだとタブ切り替えのたびに重複して重くなるため、onscrollで上書きする
+                                bannerContainer.onscroll = onScroll;
+
+                                // --- 4. 自動スクロール設定 ---
+                                const setupAutoScroll = () => {
+                                    if (bannerInterval) clearInterval(bannerInterval);
+                                    bannerInterval = setInterval(() => {
+                                        bannerContainer.scrollBy({ 
+                                            left: oneSlideWidth, 
+                                            behavior: 'smooth' 
+                                        });
+                                    }, 4000);
+                                };
+
+                                setupAutoScroll();
+
+                                // タッチ操作中はタイマーを止める
+                                // ここもリスナー重複防止のため、念のためクローンなどでリセットするか、あるいは許容範囲として毎回追加しない工夫が必要ですが、
+                                // onscrollのように上書きプロパティがないため、今回は簡易的に「ontouchstart」プロパティを使います。
+                                bannerContainer.ontouchstart = () => {
+                                    clearInterval(bannerInterval);
+                                };
+
+                                bannerContainer.ontouchend = () => {
+                                    setupAutoScroll();
+                                };
+                            };
+
+                            // 画像ロード監視
+                            if (images.length === 0) {
+                                startCarousel();
+                            } else {
+                                images.forEach(img => {
+                                    if (img.complete) {
+                                        loadedCount++;
+                                        if (loadedCount === images.length) startCarousel();
+                                    } else {
+                                        img.onload = () => {
                                             loadedCount++;
                                             if (loadedCount === images.length) startCarousel();
-                                        } else {
-                                            img.onload = () => {
-                                                loadedCount++;
-                                                if (loadedCount === images.length) startCarousel();
-                                            };
-                                            img.onerror = () => {
-                                                loadedCount++;
-                                                if (loadedCount === images.length) startCarousel();
-                                            };
-                                        }
-                                    });
-                                }
+                                        };
+                                        img.onerror = () => {
+                                            loadedCount++;
+                                            if (loadedCount === images.length) startCarousel();
+                                        };
+                                    }
+                                });
                             }
                         }
                         
