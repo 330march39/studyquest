@@ -1433,7 +1433,7 @@
                     </div>
                 </button>
             </div>
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">テーマカラー</h2>
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">テーマ設定</h2>
             <div class="flex-1"></div>
         </header>
         <div class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900">
@@ -2571,6 +2571,7 @@
                     savedQuest: null, // ★追加: クエストの中断データを保存する場所
                     settings: { backgroundScopeGlobal: true , 
                                 manualDarkMode: false,
+                                themeMode: 'system',   // ★これを追加 (light, dark, system)
                                 bgmEnabled: false,      // BGM機能のON/OFF
                                 playlist: [],           // 再生リスト(IDの配列)
                                 bgmVolume: 0.5          // 音量 (任意)
@@ -2635,17 +2636,26 @@
             
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
             
-           // 既存の updateAppearance 関数をこのコードで上書きしてください
+           // 修正箇所：updateAppearance 関数を以下のコードで上書きしてください
             const updateAppearance = () => {
                 const appContainer = $('#app-container');
                 const activeBgId = state.profile.activeBackground;
                 const activeBg = initialData.backgrounds[activeBgId] || initialData.backgrounds['default'];
                 const isGlobal = state.settings.backgroundScopeGlobal;
                 const hasImage = activeBg && activeBg.url;
-                
+            
                 // --- 1. テーマ（ライト/ダーク）決定ロジック ---
-                let effectiveTone = activeBg.tone;
-                
+                // デフォルトはユーザー設定値（未設定ならsystem）
+                let targetMode = state.settings.themeMode || 'system';
+            
+                // ★重要: 壁紙が全体適用(isGlobal)で、かつ画像がある(hasImage)場合
+                // 壁紙のtone設定を強制的に適用する
+                if (isGlobal && hasImage) {
+                    targetMode = activeBg.tone; // 'light' or 'dark' or 'system'
+                }
+            
+                // 最終的にシステム設定と照らし合わせて 'light' か 'dark' を決める
+                let effectiveTone = targetMode;
                 if (effectiveTone === 'system') {
                     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         effectiveTone = 'dark';
@@ -2653,7 +2663,7 @@
                         effectiveTone = 'light';
                     }
                 }
-                
+            
                 // --- 2. HTML要素への適用 ---
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
@@ -2662,20 +2672,17 @@
                     document.documentElement.classList.remove('dark');
                     document.documentElement.setAttribute('data-theme', 'light');
                 }
-                
+            
                 // --- 3. 背景画像の適用ロジック ---
                 if (isGlobal && hasImage) {
                     appContainer.style.backgroundImage = `url(${activeBg.url})`;
                 } else {
                     appContainer.style.backgroundImage = 'none';
                 }
-
-                // --- 4. 【追加】ノッチ（ステータスバー）の色をヘッダーと同期させる ---
+            
+                // --- 4. ノッチ（ステータスバー）の色同期 ---
                 const metaThemeColor = document.getElementById('meta-theme-color');
                 if (metaThemeColor) {
-                    // ヘッダーの色定義と合わせる
-                    // ライトモード: bg-white (#ffffff)
-                    // ダークモード: bg-gray-800 (#1f2937 - Tailwindのデフォルト値)
                     const headerColor = (effectiveTone === 'dark') ? '#1f2937' : '#ffffff';
                     metaThemeColor.setAttribute('content', headerColor);
                 }
@@ -3130,7 +3137,7 @@
                         }
 
                         // テーマカラー設定
-                        generalList.appendChild(createListItem('palette', 'テーマカラー', 'bg-blue-500', () => {
+                        generalList.appendChild(createListItem('palette', 'テーマ設定', 'bg-blue-500', () => {
                             themeSettingsPage.open();
                         }));
                     
@@ -6406,47 +6413,116 @@
             const themeSettingsPage = new SubPage('theme-settings-screen', {
                 onOpen: () => {
                     const container = $('#theme-selector-container');
+                    // コンテナの親要素を取得（ここにプルダウンを挿入するため）
+                    const parent = container.parentElement;
+            
+                    // --- 1. モード選択プルダウンの描画 ---
+                    // 既にプルダウンがあるか確認（重複追加防止）
+                    let modeControl = document.getElementById('theme-mode-control');
                     
-                    // 描画関数
+                    if (!modeControl) {
+                        modeControl = document.createElement('div');
+                        modeControl.id = 'theme-mode-control';
+                        modeControl.className = 'mb-6';
+                        modeControl.innerHTML = `
+                            <h3 class="font-semibold mb-2 text-gray-700 dark:text-gray-300">外観モード</h3>
+                            <div class="relative">
+                                <select id="theme-mode-select" class="w-full p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-800 dark:text-gray-200">
+                                    <option value="light">ライトモード</option>
+                                    <option value="dark">ダークモード</option>
+                                    <option value="system">デバイスに合わせる</option>
+                                </select>
+                                <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                            <p id="theme-locked-msg" class="text-xs text-orange-500 mt-2 hidden">
+                                <i data-lucide="lock" class="w-3 h-3 inline mr-1"></i>
+                                壁紙設定によりモードが固定されています
+                            </p>
+                        `;
+                        // カラーパレットの前に挿入
+                        parent.insertBefore(modeControl, container.previousElementSibling);
+                    }
+            
+                    // --- 2. プルダウンの状態設定 ---
+                    const select = document.getElementById('theme-mode-select');
+                    const lockedMsg = document.getElementById('theme-locked-msg');
+                    
+                    // 現在の設定値をセット
+                    select.value = state.settings.themeMode || 'system';
+            
+                    // 壁紙によるロック判定
+                    const activeBgId = state.profile.activeBackground;
+                    const activeBg = initialData.backgrounds[activeBgId];
+                    const isGlobal = state.settings.backgroundScopeGlobal;
+                    const hasImage = activeBg && activeBg.url;
+            
+                    if (isGlobal && hasImage) {
+                        // ロックする場合
+                        select.disabled = true;
+                        select.classList.add('opacity-50', 'cursor-not-allowed');
+                        lockedMsg.classList.remove('hidden');
+                        
+                        // 強制的に壁紙のトーンに合わせて表示上の選択を変えておく（保存はしない）
+                        // ※「system」設定の壁紙の場合はユーザーがいじれるように見えますが、
+                        //   壁紙側でsystem指定ならデバイス依存になるので実質制御下です。
+                        if (activeBg.tone !== 'system') {
+                            select.value = activeBg.tone;
+                        }
+                    } else {
+                        // ロック解除
+                        select.disabled = false;
+                        select.classList.remove('opacity-50', 'cursor-not-allowed');
+                        lockedMsg.classList.add('hidden');
+                    }
+            
+                    // イベントリスナー：変更時
+                    // 重複登録を防ぐため、onchangeを上書き設定
+                    select.onchange = (e) => {
+                        state.settings.themeMode = e.target.value;
+                        saveState();
+                        updateAppearance(); // 即座に反映
+                    };
+            
+                    // --- 3. カラーパレットの描画 (ここは元のまま) ---
                     const renderThemes = () => {
                         container.innerHTML = state.profile.unlockedThemes.map(id => {
                             const theme = initialData.themes[id];
                             const isActive = state.profile.activeTheme === id;
-                            // ★アニメーション(active:scale-90)とトランジションを追加
                             return `<div class="text-center">
                                 <button class="theme-btn w-16 h-16 rounded-full border-4 ${isActive ? 'border-blue-500 ring-2 ring-blue-300 dark:ring-blue-800' : 'border-transparent'} relative mx-auto block transition-transform active:scale-90 shadow-md" style="background-color: ${theme.color}" data-theme="${id}">
                                     ${isActive ? '<div class="absolute inset-0 flex items-center justify-center"><i data-lucide="check" class="text-white w-8 h-8 drop-shadow-md"></i></div>' : ''}
                                 </button>
-                                <p class="text-xs mt-2 font-bold">${theme.name}</p>
+                                <p class="text-xs mt-2 font-bold text-gray-600 dark:text-gray-400">${theme.name}</p>
                             </div>`;
                         }).join('');
+                        
                         lucide.createIcons();
-
-                        // ★イベントリスナーを設定
+            
                         container.querySelectorAll('.theme-btn').forEach(btn => {
                             btn.addEventListener('click', () => {
                                 const themeId = btn.dataset.theme;
-                                state.profile.activeTheme = themeId; // 状態を更新
-                                saveState();        // 保存
-                                updateAppearance(); // 見た目を即座に反映
+                                state.profile.activeTheme = themeId;
+                                saveState();
+                                updateAppearance();
+                                
                                 const theme = initialData.themes[themeId];
                                 if (theme) {
                                     document.documentElement.style.setProperty('--primary-color', theme.color);
                                     document.documentElement.style.setProperty('--primary-color-hover', theme.hover);
                                     
-                                    // ステータスバー（ノッチ部分）の色も更新（ライトモード時のみ反映されることが多い）
+                                    // ライトモード時のみステータスバー色も変更（任意）
                                     const metaThemeColor = document.getElementById('meta-theme-color');
                                     if (metaThemeColor && !document.documentElement.classList.contains('dark')) {
-                                        // ダークモードでなければテーマカラーを適用（お好みで）
                                         // metaThemeColor.setAttribute('content', theme.color); 
                                     }
                                 }
-                                renderThemes();     // 選択枠を更新するために再描画
+                                renderThemes();
                             });
                         });
                     };
-
+            
                     renderThemes(); // 初回描画
+                    lucide.createIcons(); // ロックアイコン等のため
                 }
             });
             $('#close-theme-settings-btn').addEventListener('click', () => themeSettingsPage.close());
