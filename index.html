@@ -902,12 +902,30 @@
             box-sizing: border-box;
         }
 
-        /* --- アニメーション設定（変更なし） --- */
-        .welcome-slide-item:nth-child(1),
-        .welcome-slide-item:nth-child(2) { animation-delay: 0s; }
-        .welcome-slide-item:nth-child(3) { animation-delay: 4s; }
-        .welcome-slide-item:nth-child(4) { animation-delay: 8s; }
-        .welcome-slide-item:nth-child(5) { animation-delay: 12s; }
+        /* ▼▼▼ 修正箇所: 画像の順番変更に対応したアニメーション遅延設定 ▼▼▼ */
+        
+        /* 1枚目: Tutorial 1 (0秒～) */
+        .welcome-slide-item:nth-child(1) { 
+            animation-delay: 0s; 
+        }
+        
+        /* 2枚目: Tutorial 2 (4秒～) */
+        .welcome-slide-item:nth-child(2) { 
+            animation-delay: 4s; 
+        }
+
+        /* 3枚目: Tutorial 3 (8秒～) */
+        .welcome-slide-item:nth-child(3) { 
+            animation-delay: 8s; 
+        }
+
+        /* 4枚目 & 5枚目: ロゴ (12秒～) */
+        /* ※ロゴはライト用とダーク用の2枚あるため、両方とも最後のタイミングに設定 */
+        .welcome-slide-item:nth-child(4),
+        .welcome-slide-item:nth-child(5) { 
+            animation-delay: 12s; 
+        }
+        /* ▲▲▲ 修正ここまで ▲▲▲ */
 
         @keyframes slideFadeLoop4 {
             0% { opacity: 0; transform: scale(0.96); }
@@ -1155,14 +1173,18 @@
     <div id="welcome-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-6 hidden">
         
         <div class="welcome-slideshow animate-fadeIn">
-            <img src="SQ_logo4.png" class="welcome-slide-item slide-logo block dark:hidden" alt="Logo Light">
-            <img src="SQ_logo5.png" class="welcome-slide-item slide-logo hidden dark:block" alt="Logo Dark">
-
+            
             <img src="tutorial_1.png" class="welcome-slide-item slide-tutorial" alt="Tutorial 1" onerror="this.style.display='none'">
+            
             <img src="tutorial_2.png" class="welcome-slide-item slide-tutorial" alt="Tutorial 2" onerror="this.style.display='none'">
+            
             <img src="tutorial_3.png" class="welcome-slide-item slide-tutorial" alt="Tutorial 3" onerror="this.style.display='none'">
-        </div>
 
+            <img src="SQ_logo4.png" class="welcome-slide-item slide-logo block dark:hidden" alt="Logo Light">
+            
+            <img src="SQ_logo5.png" class="welcome-slide-item slide-logo hidden dark:block" alt="Logo Dark">
+            
+        </div>
         <div class="w-full max-w-xs space-y-4 animate-fadeIn" style="animation-delay: 0.3s; opacity: 0;">
             <button id="btn-start-new" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105">
                 初めての方はこちら
