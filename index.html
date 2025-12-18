@@ -810,23 +810,21 @@
             padding-bottom: 10px; 
         }
 
-        /* ▼▼▼ 既存の .banner-carousel をこれに置き換えてください ▼▼▼ */
         .banner-carousel {
             display: flex;
             overflow-x: auto;
             overflow-y: hidden;
-            scroll-snap-type: x mandatory; /* スナップを効かせる */
-            -webkit-overflow-scrolling: touch; /* iOSでの慣性スクロールを有効化 */
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
             padding: 24px 7.5%;
             gap: 16px;
             width: 100%;
             scrollbar-width: none;
             -ms-overflow-style: none;
             
-            /* ▼ 追加: ブラウザによる勝手なスクロール位置調整を防ぐ */
-            overflow-anchor: none; 
+            /* ▼ 重要: ここに scroll-behavior: smooth; を書かないこと！ ▼ */
+            /* 自動スクロールの滑らかさはJS側で制御します */
         }
-        /* ▲▲▲ 修正ここまで ▲▲▲ */
         .banner-carousel::-webkit-scrollbar { display: none; }
 
         .banner-item {
@@ -2646,7 +2644,7 @@
                         const today = new Date();
                         $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]})`;
 
-                        // ▼▼▼ 修正版: バナー無限スクロール (安定版) ▼▼▼
+                        // ▼▼▼ 修正版: バナー無限スクロール (タッチ優先・完全滑らか版) ▼▼▼
                         const bannerContainer = document.getElementById('home-banner-carousel');
                         
                         if (bannerContainer && !bannerContainer.dataset.initialized) {
@@ -2655,10 +2653,10 @@
                             const originalBanners = initialData.banners || [];
                             if (originalBanners.length === 0) return;
 
-                            // 1. 画像生成 (5セット作成: [0][1][2:初期位置][3][4])
+                            // 1. 画像生成 (5セット作成)
                             const createItemsHTML = (items) => items.map(b => `
                                 <div class="banner-item">
-                                    <img src="${b.url}" alt="banner" loading="lazy" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
+                                    <img src="${b.url}" alt="banner" loading="lazy" style="pointer-events: none;" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
                                 </div>
                             `).join('');
 
@@ -2669,66 +2667,70 @@
                                 createItemsHTML(originalBanners) + 
                                 createItemsHTML(originalBanners);
 
-                            // 2. 変数定義
-                            // 画像読み込み前でも動作するように、要素数から幅を逆算する方法に変更
+                            // 2. 正確なセット幅を取得する関数
                             const getOneSetWidth = () => {
-                                // 全体のスクロール幅 / 5セット = 1セット分の幅（正確）
+                                // コンテナ全体のスクロール幅から計算（画像読み込み後でも正確）
                                 return bannerContainer.scrollWidth / 5;
                             };
 
-                            // 3. 初期位置合わせ (真ん中のセットへ)
+                            // 3. 初期位置合わせ (中央のセットへ)
                             const centerSetIndex = 2; 
                             
-                            // 少し待ってからジャンプ（レイアウト確定待ち）
                             const jumpToCenter = () => {
                                 const setWidth = getOneSetWidth();
                                 if (setWidth > 0) {
-                                    // アニメーションなしで即座に移動
                                     bannerContainer.scrollLeft = setWidth * centerSetIndex;
                                 }
                             };
                             
-                            // 複数回呼ぶことで初期化ズレを防ぐ
-                            requestAnimationFrame(jumpToCenter);
-                            setTimeout(jumpToCenter, 100);
+                            // 描画安定待ち
+                            requestAnimationFrame(() => {
+                                setTimeout(jumpToCenter, 50);
+                            });
 
-                            // 4. 無限ループ監視ロジック
-                            let isScrolling = false;
+                            // 4. 無限ループ監視 (ユーザー操作中は干渉しない)
+                            let isTouching = false;     // 指で触れているか
+                            let isScrolling = false;    // スクロール処理中か
+                            let scrollTimeout = null;   // 慣性スクロール終了判定用
 
-                            const onScroll = () => {
+                            const checkLoop = () => {
+                                // ★重要: ユーザーが触っている間は位置リセットをしない（ガクつき防止）
+                                if (isTouching) return;
+
+                                const currentScroll = bannerContainer.scrollLeft;
+                                const setWidth = getOneSetWidth();
+                                
+                                if (setWidth <= 10) return; // 幅計算前なら無視
+
+                                // ループ判定の閾値 (セット1〜3の間なら何もしない)
+                                // 右に行き過ぎた場合 (Set 4に入ったら) -> Set 2へ戻す
+                                if (currentScroll >= setWidth * 3.5) {
+                                    bannerContainer.style.scrollBehavior = 'auto'; // アニメーション無効化
+                                    bannerContainer.scrollLeft = currentScroll - setWidth;
+                                    bannerContainer.style.scrollBehavior = ''; // 元に戻す
+                                }
+                                // 左に行き過ぎた場合 (Set 0に入ったら) -> Set 2へ進める
+                                else if (currentScroll <= setWidth * 0.5) {
+                                    bannerContainer.style.scrollBehavior = 'auto';
+                                    bannerContainer.scrollLeft = currentScroll + setWidth;
+                                    bannerContainer.style.scrollBehavior = '';
+                                }
+                            };
+
+                            bannerContainer.addEventListener('scroll', () => {
                                 if (isScrolling) return;
                                 isScrolling = true;
 
-                                requestAnimationFrame(() => {
-                                    const currentScroll = bannerContainer.scrollLeft;
-                                    const setWidth = getOneSetWidth();
-                                    
-                                    // 幅がまだ計算できていない場合は無視
-                                    if (setWidth <= 10) {
-                                        isScrolling = false;
-                                        return;
-                                    }
-
-                                    // ループ判定
-                                    // 右に行き過ぎた場合 (Set 3の開始地点を超えたら) -> Set 2の開始地点に戻す
-                                    // 差分はちょうど setWidth 分なので、見た目は変わらない
-                                    if (currentScroll >= setWidth * 3) {
-                                        bannerContainer.scrollLeft = currentScroll - setWidth;
-                                    }
-                                    // 左に行き過ぎた場合 (Set 1の開始地点より前に行ったら) -> Set 2の開始地点に進める
-                                    else if (currentScroll <= setWidth * 1) {
-                                        bannerContainer.scrollLeft = currentScroll + setWidth;
-                                    }
-
+                                // 慣性スクロールが終わった頃を見計らってチェック
+                                if (scrollTimeout) clearTimeout(scrollTimeout);
+                                scrollTimeout = setTimeout(() => {
                                     isScrolling = false;
-                                });
-                            };
+                                    checkLoop();
+                                }, 100); // 100ms静止したらチェック実行
+                            }, { passive: true });
 
-                            bannerContainer.addEventListener('scroll', onScroll, { passive: true });
-
-                            // 5. 自動スクロール (ユーザー操作中は止める)
+                            // 5. 自動スクロール
                             let autoScrollTimer = null;
-                            let isTouching = false;
 
                             const startAutoScroll = () => {
                                 if (autoScrollTimer) clearInterval(autoScrollTimer);
@@ -2741,25 +2743,30 @@
                                     // 1枚分の幅 + gap(16px)
                                     const itemWidth = item.offsetWidth + 16; 
                                     
-                                    // 次のスナップポイントへスムーズに移動
+                                    // 滑らかに次へ移動
                                     bannerContainer.scrollBy({
                                         left: itemWidth,
                                         behavior: 'smooth'
                                     });
-                                }, 4000); // 4秒ごとに移動
+
+                                    // 移動完了後にループ判定を行う予約
+                                    setTimeout(checkLoop, 500); 
+                                }, 4000);
                             };
 
                             startAutoScroll();
 
-                            // タッチ操作の検出
+                            // 6. タッチ操作の検出
                             bannerContainer.addEventListener('touchstart', () => {
                                 isTouching = true;
-                                clearInterval(autoScrollTimer); // 操作中は止める
+                                clearInterval(autoScrollTimer); // 操作中は自動スクロール停止
                             }, { passive: true });
 
                             bannerContainer.addEventListener('touchend', () => {
                                 isTouching = false;
-                                startAutoScroll(); // 指を離したら再開
+                                // 指を離した直後にも一度ループチェック（端にいる場合のため）
+                                checkLoop();
+                                startAutoScroll(); // 再開
                             }, { passive: true });
                         }
                         // ▲▲▲ 修正ここまで ▲▲▲
