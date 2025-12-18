@@ -565,81 +565,30 @@
             height: 0 !important;  /* ← これを追加 */
             overflow: hidden !important;  /* ← これを追加 */
         }        
-        /* --- セーフティエリアとナビゲーションバーの再設計 --- */
+        /* --- タブバーの厳格な色指定 (黒色化防止) --- */
         
-        /* 下部のセーフティエリア（iPhoneのホームバー用） */
-        .pb-safe {
-            padding-bottom: env(safe-area-inset-bottom, 20px);
+        /* 1. 基本のタブボタン (未選択時) */
+        /* Tailwindのクラスに依存せず、CSSで強制的にグレーにする */
+        #bottom-nav .tab-btn {
+            color: #9ca3af !important; /* text-gray-400 と同じ色 */
+            transition: color 0.2s ease; /* 色の変わり目を滑らかにする */
         }
 
-        /* メインコンテンツの余白調整 */
-        /* ナビゲーションバーの高さ(64px) + フローティングボタンの飛び出し分 + セーフティエリア */
-        main {
-            padding-bottom: calc(5rem + env(safe-area-inset-bottom, 20px)); 
+        /* 2. 選択中のタブボタン */
+        /* active-tab クラスがついた瞬間、テーマカラーに上書きする */
+        #bottom-nav .tab-btn.active-tab {
+            color: var(--primary-color) !important;
         }
 
-        /* ナビゲーションバー本体 */
-        #bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            max-width: 32rem; /* max-w-lg (512px) と同じ */
-            margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.95); /* 半透明の白 */
-            border-top: 1px solid #e5e7eb; /* gray-200 */
-            z-index: 50;
-            /* 影を上方向につける */
-            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05); 
+        /* 3. 真ん中の集中ボタン (例外) */
+        /* 何があっても常に白文字 */
+        #bottom-nav .center-fab {
+            color: #ffffff !important;
         }
-
-        /* ダークモード時のナビゲーションバー */
-        html.dark #bottom-nav {
-            background-color: rgba(31, 41, 55, 0.95); /* gray-800 */
-            border-top: 1px solid #374151; /* gray-700 */
-        }
-
-        /* 真ん中の強調ボタン */
-        .center-fab {
-            position: absolute;
-            left: 50%;
-            top: -24px; /* バーより上に突き出す量 */
-            transform: translateX(-50%);
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            
-            /* 影と背景色（テーマカラーはJSで適用されるクラスに依存） */
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            
-            /* 重要: ボタンの周りに「背景と同じ色の太い枠」をつけることで、バーが凹んでいるように見せる */
-            border: 6px solid #ffffff; 
-            z-index: 60;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        /* ダークモード時のボーダー色 */
-        html.dark .center-fab {
-            border-color: #1f2937; /* ナビバーと同じ色 */
-        }
-
-        /* 押した時のアニメーション */
-        .center-fab:active {
-            transform: translateX(-50%) scale(0.9);
-        }
-
-        /* タブのアクティブ状態 */
-        .tab-btn.active-tab {
-            color: var(--primary-color);
-        }
-        .tab-btn.active-tab svg {
-            /* アクティブ時はアイコンを塗りつぶし風にするなど（任意） */
-            fill: currentColor;
-            fill-opacity: 0.1;
+        
+        /* アイコンの中身（SVG）も親の色を継承させる */
+        #bottom-nav .tab-btn svg {
+            stroke: currentColor;
         }
         
         /* 固定配置の要素を、セーフティエリア分だけ上に押し上げる */
@@ -1251,67 +1200,31 @@
         <div class="relative flex justify-between items-end h-16 px-2">
             
             <div class="flex-1 flex justify-around items-center h-full">
-                <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text transition-colors" data-page="home-page" data-title="ホーム">
+                <button class="tab-btn active-tab flex flex-col items-center justify-center w-full h-full transition-colors" data-page="home-page" data-title="ホーム">
                     <i data-lucide="home" class="w-6 h-6 mb-0.5"></i>
                     <span class="text-[10px] font-bold">ホーム</span>
                 </button>
-                <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="study-page" data-title="学習">
+                <button class="tab-btn flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" data-page="study-page" data-title="学習">
                     <i data-lucide="book-marked" class="w-6 h-6 mb-0.5"></i>
                     <span class="text-[10px] font-bold">学習</span>
                 </button>
             </div>
 
             <div class="w-16 flex-shrink-0 h-full relative">
-                <button class="center-fab primary-bg text-white tab-btn shadow-lg" data-page="focus-page" data-title="集中">
+                <button class="center-fab primary-bg tab-btn shadow-lg" data-page="focus-page" data-title="集中">
                     <i data-lucide="timer" class="w-8 h-8"></i>
                 </button>
-                
                 <div class="absolute bottom-1 w-full text-center pointer-events-none">
                     <span class="text-[10px] font-bold text-gray-400 dark:text-gray-400">集中</span>
                 </div>
             </div>
 
             <div class="flex-1 flex justify-around items-center h-full">
-                <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="my-chart-page" data-title="レポート">
+                <button class="tab-btn flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" data-page="my-chart-page" data-title="レポート">
                     <i data-lucide="bar-chart-2" class="w-6 h-6 mb-0.5"></i>
                     <span class="text-[10px] font-bold">レポート</span>
                 </button>
-                <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="settings-page" data-title="設定">
-                    <i data-lucide="settings" class="w-6 h-6 mb-0.5"></i>
-                    <span class="text-[10px] font-bold">設定</span>
-                </button>
-            </div>
-        </div>
-    </nav><nav id="bottom-nav" class="pb-safe">
-        <div class="relative flex justify-between items-end h-16 px-2">
-            
-            <div class="flex-1 flex justify-around items-center h-full">
-                <button class="tab-btn flex flex-col items-center justify-center w-full h-full primary-text transition-colors" data-page="home-page" data-title="ホーム">
-                    <i data-lucide="home" class="w-6 h-6 mb-0.5"></i>
-                    <span class="text-[10px] font-bold">ホーム</span>
-                </button>
-                <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="study-page" data-title="学習">
-                    <i data-lucide="book-marked" class="w-6 h-6 mb-0.5"></i>
-                    <span class="text-[10px] font-bold">学習</span>
-                </button>
-            </div>
-
-            <div class="w-16 flex-shrink-0 h-full relative">
-                <button class="center-fab primary-bg text-white tab-btn shadow-lg" data-page="focus-page" data-title="集中">
-                    <i data-lucide="timer" class="w-8 h-8"></i>
-                </button>
-                
-                <div class="absolute bottom-1 w-full text-center pointer-events-none">
-                    <span class="text-[10px] font-bold text-gray-400 dark:text-gray-400">集中</span>
-                </div>
-            </div>
-
-            <div class="flex-1 flex justify-around items-center h-full">
-                <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="my-chart-page" data-title="レポート">
-                    <i data-lucide="bar-chart-2" class="w-6 h-6 mb-0.5"></i>
-                    <span class="text-[10px] font-bold">レポート</span>
-                </button>
-                <button class="tab-btn flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" data-page="settings-page" data-title="設定">
+                <button class="tab-btn flex flex-col items-center justify-center w-full h-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" data-page="settings-page" data-title="設定">
                     <i data-lucide="settings" class="w-6 h-6 mb-0.5"></i>
                     <span class="text-[10px] font-bold">設定</span>
                 </button>
@@ -4455,7 +4368,7 @@
                 else { showToast('通知が拒否されました。端末の設定アプリから変更できます。'); }
             });
             
-            // ▼▼▼ 修正版v3: 色制御を厳格化したタブ切り替え処理 ▼▼▼
+            // ▼▼▼ 修正版v4: CSS制御による完全な色管理 ▼▼▼
             let isAnimating = false;
 
             $$('.tab-btn').forEach(btn => btn.addEventListener('click', e => {
@@ -4463,7 +4376,6 @@
                 const nextPageId = targetBtn.dataset.page;
                 const activePage = document.querySelector('.page.active');
                 
-                // 連打防止
                 if ((activePage && activePage.id === nextPageId) || isAnimating) return;
 
                 const nextPage = $(`#${nextPageId}`);
@@ -4471,42 +4383,33 @@
 
                 $('main').scrollTop = 0;
 
-                // --- 1. 全ボタンの状態をリセット（非アクティブ化） ---
+                // --- 1. タブの状態更新 ---
+                // すべてのタブから active-tab を削除
                 $$('.tab-btn').forEach(b => {
-                    // 真ん中のボタン (center-fab) の場合
+                    b.classList.remove('active-tab');
+                    
+                    // 集中ボタン(center-fab)のリセット（変形のみ）
                     if (b.classList.contains('center-fab')) {
-                        // 色クラスがつかないように掃除し、必ず白文字にする
-                        b.classList.remove('primary-text', 'text-gray-400', 'text-black', 'text-gray-900');
-                        b.classList.add('text-white'); 
-                        b.style.transform = ''; // アニメーションリセット
-                    } 
-                    // 通常のタブボタンの場合
-                    else {
-                        // テーマ色(primary-text)を消し、グレー(text-gray-400)に戻す
-                        b.classList.remove('primary-text', 'active-tab');
-                        b.classList.add('text-gray-400');
+                        b.style.transform = '';
                     }
                 });
 
-                // --- 2. クリックされたボタンをアクティブ化 ---
+                // 押されたタブに active-tab を付与
+                // (CSSで色が自動的に変わります。真ん中ボタンはCSSで無視されるので安全です)
+                targetBtn.classList.add('active-tab');
+
+                // --- 2. 集中ボタン独自のアニメーション ---
                 if (targetBtn.classList.contains('center-fab')) {
-                    // 【集中ボタン】色は変えずに、バウンドアニメーションのみ実行
                     targetBtn.animate([
                         { transform: 'translateX(-50%) scale(0.9)' },
                         { transform: 'translateX(-50%) scale(1.1)' },
                         { transform: 'translateX(-50%) scale(1)' }
                     ], { duration: 300, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
-                    
-                } else {
-                    // 【通常タブ】グレーを消して、テーマカラーをつける
-                    targetBtn.classList.remove('text-gray-400');
-                    targetBtn.classList.add('primary-text', 'active-tab');
                 }
 
-                // ヘッダータイトル更新
                 $('#header-title').textContent = targetBtn.dataset.title;
 
-                // --- 3. ページ遷移アニメーション (変更なし) ---
+                // --- 3. ページ遷移処理 (変更なし) ---
                 isAnimating = true;
 
                 if (activePage) {
@@ -4519,13 +4422,11 @@
 
                 nextPage.classList.add('page-enter');
 
-                // 描画負荷分散
                 requestAnimationFrame(() => {
                     setTimeout(() => {
                         if (renderEngine.pages[nextPageId]) { 
                             renderEngine.pages[nextPageId](); 
                         }
-                        // 集中ページならミニタイマーを表示しない判定
                         if (nextPageId === 'focus-page') {
                             miniTimerTemporarilyHidden = false;
                         }
