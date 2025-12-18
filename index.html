@@ -854,18 +854,24 @@
             user-select: none;
         }
         /* ▲▲▲ 修正ここまで ▲▲▲ */
-        /* ▼▼▼ 修正版v2: サイズ定義の見直しと配置調整 ▼▼▼ */
+        /* ▼▼▼ 修正版v3: 縦長画像対応・サイズ最大化 ▼▼▼ */
         .welcome-slideshow {
             position: relative;
-            /* スマホでは画面幅の90%を使用し、PCなどでは最大420pxまでとする */
-            width: 90%;
-            max-width: 420px; /* これにより以前より大きく表示されます */
-            aspect-ratio: 1 / 1; /* 正方形を維持 */
             
-            /* 上下に余白を取り、中央揃えにする */
-            margin: 2rem auto 5rem auto; /* 下マージンを5remに増やしてボタンと離す */
+            /* 横幅はいっぱいまで使う */
+            width: 100%;
             
-            /* フレックスアイテムとしての配置を調整 */
+            /* ★ここが重要: 正方形固定をやめ、画面高さの約半分(55%)を使う設定に変更 */
+            /* これにより縦長の画像も縮小されず、縦に大きく表示されます */
+            height: 55vh; 
+            
+            /* PCなどで巨大になりすぎないためのリミッター */
+            max-width: 500px;
+            max-height: 700px; 
+            
+            /* 中央揃えと余白 */
+            margin: 1rem auto 4rem auto;
+            
             flex-shrink: 0; 
         }
 
@@ -875,7 +881,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            /* 画像の配置方法を微調整 */
+            /* 枠に合わせて最大サイズで表示 */
             object-fit: contain;
             object-position: center;
             
@@ -883,21 +889,20 @@
             animation: slideFadeLoop4 16s infinite;
         }
 
-        /* --- 画像ごとのサイズ微調整 --- */
+        /* --- 画像ごとの微調整 --- */
         
-        /* チュートリアル用: 余白なしで大きく表示 */
+        /* チュートリアル用: 余白なし */
         .slide-tutorial {
             padding: 0; 
         }
 
-        /* ロゴ用: 少しだけ余白を入れて、チュートリアルより少し小さく見せる */
-        /* 前回小さくなりすぎたので、パディングを減らしました (4rem -> 1.5rem) */
+        /* ロゴ用: ロゴは横長や正方形が多いので、縦長枠の中で少し余白を持たせてバランスを取る */
         .slide-logo {
-            padding: 1.5rem; 
-            box-sizing: border-box; /* パディングをサイズ計算に含める */
+            padding: 2rem; 
+            box-sizing: border-box;
         }
 
-        /* --- アニメーションタイミング（変更なし） --- */
+        /* --- アニメーション設定（変更なし） --- */
         .welcome-slide-item:nth-child(1),
         .welcome-slide-item:nth-child(2) { animation-delay: 0s; }
         .welcome-slide-item:nth-child(3) { animation-delay: 4s; }
