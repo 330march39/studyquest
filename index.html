@@ -590,6 +590,47 @@
         #bottom-nav .tab-btn svg {
             stroke: currentColor;
         }
+        /* --- 真ん中の強調ボタン (崩れ防止・完全版) --- */
+        .center-fab {
+            position: absolute;
+            left: 50%;
+            top: -24px; /* バーから上に飛び出す量 */
+            transform: translateX(-50%);
+            
+            /* ★ここが重要: サイズと形を固定 */
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            
+            /* ★ここが重要: アイコンをど真ん中に配置 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            /* 色設定（強制） */
+            color: #ffffff !important; /* アイコンは常に白 */
+            
+            /* 背景と同じ色の太い枠線で「くり抜き」効果 */
+            border: 6px solid #ffffff; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            
+            z-index: 60;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            
+            /* タップ時のハイライト消去 */
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ダークモード時の枠線色（背景色に合わせる） */
+        html.dark .center-fab {
+            border-color: #1f2937; 
+        }
+
+        /* 押した時のアニメーション */
+        .center-fab:active {
+            transform: translateX(-50%) scale(0.9);
+        }
         
         /* 固定配置の要素を、セーフティエリア分だけ上に押し上げる */
         /* calc() を使って「元の位置 + セーフティエリア」を計算 */
@@ -1211,7 +1252,7 @@
             </div>
 
             <div class="w-16 flex-shrink-0 h-full relative">
-                <button class="center-fab primary-bg tab-btn shadow-lg" data-page="focus-page" data-title="集中">
+                <button class="center-fab primary-bg tab-btn" data-page="focus-page" data-title="集中">
                     <i data-lucide="timer" class="w-8 h-8"></i>
                 </button>
                 <div class="absolute bottom-1 w-full text-center pointer-events-none">
