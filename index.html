@@ -567,20 +567,14 @@
         }        
         /* 下部のセーフティエリア分のパディングを追加 */
         .pb-safe {
-          padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: env(safe-area-inset-bottom, 10px);
         }
         
         /* ナビゲーションバー専用: コンテンツ領域の高さを維持しつつ、パディングで背景を伸ばす */
         .nav-safe {
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          height: 64px;                 /* タブ自体のデザイン高さ */
-          padding-bottom: env(safe-area-inset-bottom, 0px);
-          box-sizing: border-box;        /* ここが重要 */
+            padding-bottom: env(safe-area-inset-bottom, 10px);
+            box-sizing: content-box; /* これが重要: height:64pxの中にパディングを含めない設定 */
         }
-
         
         /* 固定配置の要素を、セーフティエリア分だけ上に押し上げる */
         /* calc() を使って「元の位置 + セーフティエリア」を計算 */
