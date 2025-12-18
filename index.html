@@ -65,10 +65,30 @@
     </style>
 
     <script>
-        // 画面描画前にOSの設定を確認して dark クラスを付与
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
+        // 修正箇所: 登録済みかチェックし、未登録なら強制ライトモードにする
+        (function() {
+            let isRegistered = false;
+            try {
+                const saved = localStorage.getItem('quizAppUltimateV8');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    // ユーザー登録済みフラグを確認
+                    if (parsed.user && parsed.user.isRegistered) {
+                        isRegistered = true;
+                    }
+                }
+            } catch (e) {
+                // エラー時は未登録扱い（ライトモード）
+            }
+
+            // 登録済み かつ OSがダークモードの場合のみ dark クラスを付与
+            if (isRegistered && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                // それ以外（初回起動含む）はクラスを削除（ライトモード）
+                document.documentElement.classList.remove('dark');
+            }
+        })();
     </script>
 
     <!-- PWA関連 -->
@@ -2571,7 +2591,7 @@
                     savedQuest: null, // ★追加: クエストの中断データを保存する場所
                     settings: { backgroundScopeGlobal: true , 
                                 manualDarkMode: false,
-                                themeMode: 'system',   // ★これを追加 (light, dark, system)
+                                themeMode: 'light',   // ★これを追加 (light, dark, system)
                                 bgmEnabled: false,      // BGM機能のON/OFF
                                 playlist: [],           // 再生リスト(IDの配列)
                                 bgmVolume: 0.5          // 音量 (任意)
@@ -2639,6 +2659,16 @@
            // 修正箇所：updateAppearance 関数を以下のコードで上書きしてください
             const updateAppearance = () => {
                 const appContainer = $('#app-container');
+                if (!state.user.isRegistered) {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    appContainer.style.backgroundImage = 'none'; // 壁紙もなし
+                    
+                    // ステータスバーも白に
+                    const metaThemeColor = document.getElementById('meta-theme-color');
+                    if (metaThemeColor) metaThemeColor.setAttribute('content', '#ffffff');
+                    return; // ここで処理を終える
+                }
                 const activeBgId = state.profile.activeBackground;
                 const activeBg = initialData.backgrounds[activeBgId] || initialData.backgrounds['default'];
                 const isGlobal = state.settings.backgroundScopeGlobal;
@@ -5343,12 +5373,15 @@
                     // 完了処理
                     state.user.isRegistered = true;
 
+                    state.settings.themeMode = 'system';
+
                     // ▼▼▼ 追加: 初回スタート時にログインボーナスを付与してポップアップを表示 ▼▼▼
                     addLP(10000, '初回ログインボーナス', true);
                     state.lastLogin = new Date().toDateString();
                     // ▲▲▲ 追加ここまで ▲▲▲
 
                     saveState();
+                    updateAppearance();
                     
                     $('#tutorial-screen').classList.add('hidden');
                     $('#app-container').classList.remove('hidden');
