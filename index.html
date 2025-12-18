@@ -2644,7 +2644,7 @@
                         const today = new Date();
                         $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]})`;
 
-                        // ▼▼▼ 修正版: 高速スクロール対応 (判定緩和版) ▼▼▼
+                        // ▼▼▼ 修正版: 完全シームレスな無限スクロール ▼▼▼
                         const bannerContainer = document.getElementById('home-banner-carousel');
                         
                         if (bannerContainer && !bannerContainer.dataset.initialized) {
@@ -2653,10 +2653,8 @@
                             const originalBanners = initialData.banners || [];
                             if (originalBanners.length === 0) return;
 
-                            const count = originalBanners.length;
-
-                            // 1. 画像生成 (5セット作成)
-                            // [Set 0] [Set 1] [Set 2(中心)] [Set 3] [Set 4]
+                            // 画像生成: 5セット作成 [Set0][Set1][Set2(初期位置)][Set3][Set4]
+                            // これだけあれば、どんなに高速にスクロールしても端が見えません
                             const createItemsHTML = (items) => items.map(b => `
                                 <div class="banner-item">
                                     <img src="${b.url}" alt="banner" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=Banner+${b.id}'">
@@ -2670,59 +2668,64 @@
                                 createItemsHTML(originalBanners) + 
                                 createItemsHTML(originalBanners);
 
-                            const centerSetIndex = 2; // 真ん中のセット (Set 2)
-
-                            // 2. 座標計算用ヘルパー
-                            const getOneSetWidth = () => {
+                            // 1セット分の幅を正確に計算する関数
+                            const getSingleSetWidth = () => {
                                 const item = bannerContainer.querySelector('.banner-item');
                                 if (!item) return 0;
+                                // CSSのgap: 16px と itemの幅を取得
                                 const gap = 16; 
-                                return (item.offsetWidth + gap) * count;
+                                // 画像の枚数分だけ幅とgapを足す
+                                return (item.offsetWidth + gap) * originalBanners.length;
                             };
 
-                            // 3. 初期位置合わせ (真ん中のセットへ)
+                            // 初期位置合わせ (真ん中の Set 2 の先頭へ)
                             const jumpToCenter = () => {
-                                const setWidth = getOneSetWidth();
+                                const setWidth = getSingleSetWidth();
                                 if (setWidth > 0) {
-                                    bannerContainer.scrollTo({
-                                        left: setWidth * centerSetIndex,
-                                        behavior: 'instant'
-                                    });
+                                    // Set 0, Set 1 を飛ばして Set 2 の頭へ
+                                    bannerContainer.scrollLeft = setWidth * 2;
                                 }
                             };
                             
-                            // 描画待ち
-                            setTimeout(jumpToCenter, 50);
-                            setTimeout(jumpToCenter, 300);
+                            // 画像読み込み待ちを考慮して少し遅らせて初期位置へ移動
+                            requestAnimationFrame(() => {
+                                setTimeout(jumpToCenter, 50);
+                                setTimeout(jumpToCenter, 300); // 念のため2回
+                            });
 
-                            // 4. 【重要】ループ監視 (判定を緩くする)
+                            // --- 【重要】裏側で位置を戻す処理 ---
                             const onScroll = () => {
-                                const setWidth = getOneSetWidth();
+                                const setWidth = getSingleSetWidth();
                                 if (setWidth === 0) return;
 
                                 const currentScroll = bannerContainer.scrollLeft;
-                                
-                                // 判定ライン:
-                                // 左側: Set 1 より左に行ったら (Set 0 に入りそうになったら)
-                                // 右側: Set 3 より右に行ったら (Set 4 に入りそうになったら)
-                                // これにより Set 1, 2, 3 の間 (画像数×3 の広大なエリア) は自由にスクロールできる
-                                
-                                const leftThreshold = setWidth * 0.5; // 左の限界付近
-                                const rightThreshold = setWidth * 3.5; // 右の限界付近
 
-                                // 右に行き過ぎた場合 -> 2セット分戻す (Set 4 -> Set 2)
-                                if (currentScroll >= rightThreshold) {
-                                    bannerContainer.scrollLeft = currentScroll - (setWidth * 2);
-                                }
-                                // 左に行き過ぎた場合 -> 2セット分進める (Set 0 -> Set 2)
-                                else if (currentScroll <= leftThreshold) {
-                                    bannerContainer.scrollLeft = currentScroll + (setWidth * 2);
+                                // ■ ループ判定ロジック
+                                // [Set0] [Set1] [Set2] [Set3] [Set4]
+                                // 
+                                // Set2 の開始位置 = setWidth * 2
+                                // Set3 の開始位置 = setWidth * 3
+                                //
+                                // もし「Set3に入った（Set3と同じ見た目の位置に来た）」なら、
+                                // 即座に「Set2の同じ位置」に戻す。見た目は全く変わらない。
+
+                                if (currentScroll >= setWidth * 3) {
+                                    // 右に行き過ぎた -> 左に戻す
+                                    // 差分（余剰分）を計算して、Set2の頭に足すことでスムーズさを維持
+                                    const overflow = currentScroll - (setWidth * 3);
+                                    bannerContainer.scrollLeft = (setWidth * 2) + overflow;
+                                } 
+                                else if (currentScroll < setWidth * 2) {
+                                    // 左に行き過ぎた（Set1に入った） -> 右に戻す
+                                    // 不足分を計算して、Set3の手前に戻す
+                                    const shortage = (setWidth * 2) - currentScroll;
+                                    bannerContainer.scrollLeft = (setWidth * 3) - shortage;
                                 }
                             };
 
                             bannerContainer.addEventListener('scroll', onScroll, { passive: true });
 
-                            // 5. 自動スクロール
+                            // --- 自動スクロール処理 ---
                             let isTouching = false;
                             
                             const autoScroll = () => {
@@ -2730,21 +2733,23 @@
 
                                 const item = bannerContainer.querySelector('.banner-item');
                                 if (!item) return;
-                                const oneSlideWidth = item.offsetWidth + 16;
+                                const itemWidth = item.offsetWidth + 16; // gap含む
 
+                                // 現在位置から「次の1枚」の場所を計算
                                 const currentScroll = bannerContainer.scrollLeft;
-                                const nextScroll = Math.ceil(currentScroll / oneSlideWidth) * oneSlideWidth + oneSlideWidth;
+                                const nextScroll = Math.round(currentScroll / itemWidth) * itemWidth + itemWidth;
                                 
                                 bannerContainer.scrollTo({
                                     left: nextScroll,
-                                    behavior: 'smooth'
+                                    behavior: 'smooth' 
                                 });
                             };
 
+                            // タイマー設定
                             if (bannerInterval) clearInterval(bannerInterval);
                             bannerInterval = setInterval(autoScroll, 4000);
 
-                            // 6. タッチ制御
+                            // タッチ操作中は自動スクロールを止める
                             bannerContainer.addEventListener('touchstart', () => {
                                 isTouching = true;
                                 clearInterval(bannerInterval);
@@ -2758,46 +2763,9 @@
                         }
                         // ▲▲▲ 修正ここまで ▲▲▲
                         
-                        // --- ▼▼▼ ホーム画面リスト描画の修正 ▼▼▼ ---
-                        const countdownContainer = $('#countdown-list');
-                        
-                        if (state.countdowns.length === 0) {
-                            countdownContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">右上の「+」ボタンでテストなどの日程を追加できます。</p>`;
-                        } else {
-                            countdownContainer.innerHTML = state.countdowns.map(cd => {
-                                const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                                const targetStart = new Date(cd.date);
-                                targetStart.setHours(0,0,0,0);
-                                const diffTime = targetStart - todayStart;
-                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                const dayText = diffDays > 0 ? `あと <span class="text-2xl font-bold primary-text">${diffDays}</span> 日` : diffDays === 0 ? `<span class="text-xl font-bold text-red-500">今日です！</span>` : `<span class="text-gray-500">終了</span>`;
-                                
-                                // ★変更点: 全体を button タグにするか、onclick を設定する
-                                // ここでは div に countdown-card クラスを付け、親要素でイベント委任します
-                                return `
-                                    <div class="countdown-card bg-white dark:bg-gray-700 rounded-lg shadow-sm p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" data-id="${cd.id}">
-                                        <div>
-                                            <h3 class="font-bold text-gray-800 dark:text-gray-200 text-lg">${cd.name}</h3>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 tabular-nums mt-1">${cd.date.replace(/-/g, '/')}</p>
-                                        </div>
-                                        <div class="text-right">
-                                            ${dayText}
-                                        </div>
-                                        </div>
-                                `;
-                            }).join('');
-
-                            // ★重要: カードクリック時のイベントリスナーを追加（毎回再設定）
-                            countdownContainer.querySelectorAll('.countdown-card').forEach(card => {
-                                card.addEventListener('click', () => {
-                                    openCountdownScreen(card.dataset.id);
-                                });
-                            });
-                        }
-                        // --- ▲▲▲ 修正ここまで ▲▲▲ ---
-                        
                         renderHomeTasks();
                     },
+                    
                     'study-page': () => {
                         const pinnedContainer = $('#pinned-quizzes');
                         const pinnedSectionContainer = pinnedContainer.parentElement;
