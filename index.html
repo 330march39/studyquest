@@ -3063,14 +3063,10 @@
                                 
                                 // ★変更点: 全体を button タグにするか、onclick を設定する
                                 // ここでは div に countdown-card クラスを付け、親要素でイベント委任します
-                                taskEl.className = `task-item swipe-container relative overflow-hidden rounded-2xl mb-2`; 
-
-                                taskEl.innerHTML = `
-                                    <div class="swipe-actions">
-                                        </div>
-                                
-                                    <div class="swipe-content flex items-center p-3 bg-white dark:bg-gray-800 shadow-sm relative z-10 ${isCompleted ? 'bg-gray-100 dark:bg-gray-900' : ''}">
-                                        <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400 shrink-0">${index + 1}</span>
+                                return `
+                                    <div class="countdown-card bg-white dark:bg-gray-700 rounded-2xl shadow-sm p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" data-id="${cd.id}">
+                                        <div>
+                                            </div>
                                         </div>
                                 `;
                             }).join('');
@@ -3852,29 +3848,15 @@
                         const taskEl = document.createElement('div');
                         // 並び替え時のID識別用に data-id を追加
                         taskEl.setAttribute('data-id', task.id); 
-                        taskEl.className = `task-item swipe-container relative overflow-hidden rounded-lg mb-2`; 
-                        
+                        taskEl.className = `task-item swipe-container relative overflow-hidden rounded-2xl mb-2`; 
+
                         taskEl.innerHTML = `
                             <div class="swipe-actions">
-                                <button class="btn-complete swipe-btn bg-gray-400 w-[70px]">
-                                    <i data-lucide="check" class="w-6 h-6"></i>
-                                    <span>完了</span>
-                                </button>
-                                <button class="btn-delete swipe-btn bg-red-500 w-[70px]">
-                                    <i data-lucide="trash-2" class="w-6 h-6"></i>
-                                    <span>削除</span>
-                                </button>
-                            </div>
-
-                            <div class="swipe-content flex items-center p-2 bg-white dark:bg-gray-800 shadow-sm relative z-10 ${isCompleted ? 'bg-gray-100 dark:bg-gray-900' : ''}">
+                                </div>
+                        
+                            <div class="swipe-content flex items-center p-3 bg-white dark:bg-gray-800 shadow-sm relative z-10 ${isCompleted ? 'bg-gray-100 dark:bg-gray-900' : ''}">
                                 <span class="font-bold w-6 text-center text-gray-600 dark:text-gray-400 shrink-0">${index + 1}</span>
-                                
-                                <input type="text" value="${task.text}" class="task-text-input flex-grow min-w-0 bg-transparent p-1 focus:outline-none rounded ${textStyle}" ${isCompleted ? 'disabled' : ''}>
-                                
-                                <button type="button" class="task-handle cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-opacity p-2 shrink-0 ${isCompleted ? 'invisible' : ''}">
-                                    <i data-lucide="grip-vertical" class="w-5 h-5"></i>
-                                </button>
-                            </div>
+                                </div>
                         `;
                         
                         homeTaskListEl.appendChild(taskEl);
