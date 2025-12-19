@@ -1012,6 +1012,16 @@
             100% { opacity: 0; transform: scale(1.05); }
         }
         /* ▲▲▲ 修正ここまで ▲▲▲ */
+        /* PWA誘導画面用のスタイル */
+        #pwa-install-prompt {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        /* iOSのシェアアイコンの見た目を調整（必要であれば） */
+        .ios-share-icon {
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 4px;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -1292,12 +1302,35 @@
             
         </div>
         <div class="w-full max-w-xs space-y-4 animate-fadeIn" style="animation-delay: 0.3s; opacity: 0;">
-            <button id="btn-start-new" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105">
-                初めての方はこちら
-            </button>
-            <button id="btn-transfer-start" class="w-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-4 rounded-xl shadow transition-colors border border-gray-200 dark:border-gray-700">
-                以前のデータを引き継ぐ
-            </button>
+            
+            <div id="pwa-start-buttons" class="space-y-4 hidden">
+                <button id="btn-start-new" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105">
+                    初めての方はこちら
+                </button>
+                <button id="btn-transfer-start" class="w-full bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold py-4 rounded-xl shadow transition-colors border border-gray-200 dark:border-gray-700">
+                    以前のデータを引き継ぐ
+                </button>
+            </div>
+
+            <div id="pwa-install-prompt" class="hidden flex-col items-center text-center p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl">
+                <div class="mb-3 p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full text-indigo-600 dark:text-indigo-400">
+                    <i data-lucide="download" class="w-8 h-8"></i>
+                </div>
+                <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">アプリとしてインストール</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    このサービスを利用するには、<br>ホーム画面に追加する必要があります。
+                </p>
+
+                <button id="pwa-install-btn" class="hidden w-full primary-bg text-white font-bold py-3 px-6 rounded-lg shadow-md mb-2">
+                    ホーム画面に追加する
+                </button>
+
+                <div id="ios-install-instruction" class="hidden text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 p-3 rounded-lg w-full text-left">
+                    <p class="mb-2 font-bold flex items-center"><i data-lucide="share" class="w-4 h-4 mr-2"></i>共有ボタンをタップ</p>
+                    <p class="flex items-center"><i data-lucide="plus-square" class="w-4 h-4 mr-2"></i>「ホーム画面に追加」を選択</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -7118,6 +7151,74 @@
                 
                 lucide.createIcons();
             };
+
+            let deferredPrompt = null;
+
+            // 1. Android/Chrome用のインストールイベントをキャッチ
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                checkPwaStatus(); // イベントが来たら表示更新
+            });
+
+            // 2. 起動モードをチェックして表示を切り替える関数
+            const checkPwaStatus = () => {
+                const startContainer = document.getElementById('pwa-start-buttons');
+                const installContainer = document.getElementById('pwa-install-prompt');
+                const installBtn = document.getElementById('pwa-install-btn');
+                const iosInstruction = document.getElementById('ios-install-instruction');
+
+                // PWAモードかどうかの判定
+                // iOS (navigator.standalone) または 最近のAndroid/PC (display-mode: standalone)
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+                if (isStandalone) {
+                    // ★アプリとして開いている場合
+                    startContainer.classList.remove('hidden');
+                    installContainer.classList.add('hidden');
+                } else {
+                    // ★ブラウザとして開いている場合 (インストール強制)
+                    startContainer.classList.add('hidden');
+                    installContainer.classList.remove('hidden');
+                    installContainer.style.display = 'flex'; // flexで中央揃え
+
+                    // iOSかどうかの判定
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+                    if (isIOS) {
+                        // iOSの場合: インストールボタンは作れないので手順を表示
+                        installBtn.classList.add('hidden');
+                        iosInstruction.classList.remove('hidden');
+                    } else {
+                        // Android/PCの場合: beforeinstallpromptが来ていればボタンを表示
+                        iosInstruction.classList.add('hidden');
+                        if (deferredPrompt) {
+                            installBtn.classList.remove('hidden');
+                        } else {
+                            // イベントが来てない場合（既にインストール済みでブラウザで開いた場合など）
+                            // 念のため案内だけ出す
+                            installBtn.classList.add('hidden');
+                            // 文言を変えるなどの微調整が可能
+                        }
+                    }
+                }
+                // アイコン更新
+                if(window.lucide) lucide.createIcons(); 
+            };
+
+            // 3. Android用インストールボタンのクリックイベント
+            document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`User response to the install prompt: ${outcome}`);
+                    deferredPrompt = null;
+                }
+            });
+
+            // 4. 初期実行とリサイズ監視
+            checkPwaStatus();
+            window.matchMedia('(display-mode: standalone)').addEventListener('change', checkPwaStatus);
             
             init();
         });
