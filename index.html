@@ -7212,9 +7212,9 @@
             init();
         });
     </script>
-    <div id="ios-install-overlay" class="fixed inset-0 z-[9999] bg-black/90 text-white hidden flex-col items-center justify-end pb-10 animate-fadeIn" onclick="this.classList.add('hidden')">
+    <div id="ios-install-overlay" class="fixed inset-0 z-[9999] bg-black/90 text-white hidden animate-fadeIn" onclick="this.classList.add('hidden')">
         
-        <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+        <div class="absolute inset-0 flex flex-col items-center justify-start pt-20 px-6 text-center pointer-events-none">
             <div class="mb-6">
                 <img src="SQ_logo.png" alt="Icon" class="w-20 h-20 rounded-2xl shadow-2xl mx-auto mb-4 border border-white/20">
                 <h3 class="text-2xl font-bold mb-2">ホーム画面に追加</h3>
@@ -7224,25 +7224,24 @@
                 </p>
             </div>
 
-            <div class="space-y-4 text-left bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+            <div class="space-y-4 text-left bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-sm w-full max-w-sm">
                 <div class="flex items-center">
-                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3">1</span>
+                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3 flex-shrink-0">1</span>
                     <p class="text-sm">画面下部の <i data-lucide="share" class="inline w-4 h-4 mx-1"></i> (共有) をタップ</p>
                 </div>
                 <div class="flex items-center">
-                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3">2</span>
+                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3 flex-shrink-0">2</span>
                     <p class="text-sm">メニューの「ホーム画面に追加」を選択</p>
                 </div>
                 <div class="flex items-center">
-                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3">3</span>
+                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3 flex-shrink-0">3</span>
                     <p class="text-sm">右上の「追加」をタップして完了</p>
                 </div>
             </div>
             
-            <p class="mt-8 text-gray-500 text-xs font-bold">画面をタップして閉じる</p>
         </div>
 
-        <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce pointer-events-none">
+        <div class="absolute bottom-6 right-8 flex flex-col items-center animate-bounce pointer-events-none">
             <p class="text-sm font-bold mb-2">ここをタップ</p>
             <i data-lucide="arrow-down" class="w-8 h-8 text-white"></i>
         </div>
