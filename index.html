@@ -1023,6 +1023,24 @@
             vertical-align: middle;
             margin: 0 4px;
         }
+        /* ▼▼▼ 追加: LPバナー用アニメーション ▼▼▼ */
+        @keyframes shine {
+            0% { left: -100%; opacity: 0; }
+            50% { opacity: 0.5; }
+            100% { left: 200%; opacity: 0; }
+        }
+        .animate-shine {
+            animation: shine 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes gradient-xy {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .animate-gradient-xy {
+            background-size: 200% 200%;
+            animation: gradient-xy 6s ease infinite;
+        }
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -1036,11 +1054,6 @@
         
         <header class="header-safe bg-white dark:bg-gray-800 px-4 border-b border-gray-200 dark:border-gray-700 shadow-sm">
             <h1 id="header-title" class="text-lg font-bold text-gray-900 dark:text-white">ホーム</h1>
-            
-            <button id="lp-button" class="flex items-center space-x-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full px-3 py-1 hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors border border-yellow-200 dark:border-yellow-700">
-                <img src="coin.png" alt="Coin" class="w-4 h-4 object-contain">
-                <span id="lp-display" class="font-bold text-xs">0 LP</span>
-            </button>
         </header>
 
         <main class="flex-grow overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
@@ -1049,9 +1062,32 @@
                     <div id="home-banner-carousel" class="banner-carousel">
                         </div>
                 </div>
-                <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm text-center">
-                    <p id="today-date" class="text-lg font-semibold text-gray-600 dark:text-gray-300"></p>
-                </div>
+                
+                <button id="home-lp-banner" class="w-full relative overflow-hidden rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-[1.02] active:scale-95 group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-500 animate-gradient-xy"></div>
+                    <div class="absolute inset-0 bg-white/10 backdrop-blur-[1px]"></div>
+                    
+                    <div class="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-25deg] animate-shine"></div>
+            
+                    <div class="relative z-10 p-5 flex items-center justify-between text-white">
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-white/20 p-3 rounded-full backdrop-blur-md shadow-inner border border-white/30">
+                                <img src="coin.png" alt="Coin" class="w-8 h-8 object-contain drop-shadow-md">
+                            </div>
+                            <div class="text-left">
+                                <p class="text-xs font-bold text-yellow-100 uppercase tracking-widest opacity-90">Current Points</p>
+                                <p class="text-3xl font-black tracking-tighter drop-shadow-sm flex items-baseline">
+                                    <span id="home-lp-value" class="tabular-nums">0</span>
+                                    <span class="text-sm ml-1 font-bold opacity-80">LP</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm hover:bg-white/30 transition-colors">
+                            <i data-lucide="chevron-right" class="w-6 h-6 text-white"></i>
+                        </div>
+                    </div>
+                </button>
 
                  <div>
                     <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center mb-3">
@@ -2830,10 +2866,9 @@
             };
             
             const updateLpDisplay = () => {
-                // ヘッダーのLP表示を更新
-                const headerLp = $('#lp-display');
-                if (headerLp) {
-                    headerLp.textContent = `${state.profile.lp} LP`;
+                const homeLp = $('#home-lp-value');
+                if (homeLp) {
+                    homeLp.textContent = state.profile.lp.toLocaleString(); // 3桁区切りで見やすく
                 }
             
                 // 新しい「マイステータス画面」のLP表示を更新
@@ -2878,9 +2913,6 @@
             const renderEngine = {
                 pages: {
                     'home-page': () => {
-                        const today = new Date();
-                        $('#today-date').textContent = `${today.getFullYear()}年 ${today.getMonth() + 1}月 ${today.getDate()}日 (${'日月火水木金土'[today.getDay()]})`;
-
                         // ▼▼▼ 修正版: 高速スクロール対応 (判定緩和版) ▼▼▼
                         const bannerContainer = document.getElementById('home-banner-carousel');
                         
@@ -5654,8 +5686,10 @@
                 });
             });
             
-            // LPボタン（ヘッダーの星マーク）を押したらステータス画面を開く
-            $('#lp-button').addEventListener('click', () => statusPage.open());
+            const homeLpBanner = $('#home-lp-banner');
+            if (homeLpBanner) {
+                homeLpBanner.addEventListener('click', () => statusPage.open());
+            }
 
             // 戻るボタンを押したらステータス画面を閉じる
             $('#close-status-btn').addEventListener('click', () => statusPage.close());
