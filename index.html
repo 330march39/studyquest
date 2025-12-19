@@ -1312,23 +1312,14 @@
                 </button>
             </div>
 
-            <div id="pwa-install-prompt" class="hidden flex-col items-center text-center p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl">
-                <div class="mb-3 p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full text-indigo-600 dark:text-indigo-400">
-                    <i data-lucide="download" class="w-8 h-8"></i>
-                </div>
-                <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">アプリとしてインストール</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    このサービスを利用するには、<br>ホーム画面に追加する必要があります。
-                </p>
-
-                <button id="pwa-install-btn" class="hidden w-full primary-bg text-white font-bold py-3 px-6 rounded-lg shadow-md mb-2">
-                    ホーム画面に追加する
+            <div id="pwa-install-trigger-area" class="hidden">
+                <button id="pwa-install-trigger-btn" class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105 flex items-center justify-center">
+                    <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+                    アプリとして始める
                 </button>
-
-                <div id="ios-install-instruction" class="hidden text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 p-3 rounded-lg w-full text-left">
-                    <p class="mb-2 font-bold flex items-center"><i data-lucide="share" class="w-4 h-4 mr-2"></i>共有ボタンをタップ</p>
-                    <p class="flex items-center"><i data-lucide="plus-square" class="w-4 h-4 mr-2"></i>「ホーム画面に追加」を選択</p>
-                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-3">
+                    ※ プレイするにはホーム画面への追加が必要です
+                </p>
             </div>
 
         </div>
@@ -7152,76 +7143,109 @@
                 lucide.createIcons();
             };
 
+            // ==========================================
+            // ▼▼▼ PWAインストール強制ロジック (改修版) ▼▼▼
+            // ==========================================
             let deferredPrompt = null;
 
             // 1. Android/Chrome用のインストールイベントをキャッチ
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
-                checkPwaStatus(); // イベントが来たら表示更新
+                // Androidの場合、イベントが来てからボタンを表示する等の制御も可能ですが
+                // 今回は一律「ブラウザなら表示」で制御します
             });
 
             // 2. 起動モードをチェックして表示を切り替える関数
             const checkPwaStatus = () => {
-                const startContainer = document.getElementById('pwa-start-buttons');
-                const installContainer = document.getElementById('pwa-install-prompt');
-                const installBtn = document.getElementById('pwa-install-btn');
-                const iosInstruction = document.getElementById('ios-install-instruction');
+                const startContainer = document.getElementById('pwa-start-buttons'); // 通常のスタートボタン群
+                const installArea = document.getElementById('pwa-install-trigger-area'); // インストールボタン(1つ)
+                const installBtn = document.getElementById('pwa-install-trigger-btn');
+                const iosOverlay = document.getElementById('ios-install-overlay');
 
                 // PWAモードかどうかの判定
-                // iOS (navigator.standalone) または 最近のAndroid/PC (display-mode: standalone)
                 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
                 if (isStandalone) {
-                    // ★アプリとして開いている場合
+                    // ★アプリとして開いている場合 -> 通常通り
                     startContainer.classList.remove('hidden');
-                    installContainer.classList.add('hidden');
+                    installArea.classList.add('hidden');
                 } else {
-                    // ★ブラウザとして開いている場合 (インストール強制)
+                    // ★ブラウザとして開いている場合 -> インストールボタンのみ表示 (画面スッキリ)
                     startContainer.classList.add('hidden');
-                    installContainer.classList.remove('hidden');
-                    installContainer.style.display = 'flex'; // flexで中央揃え
+                    installArea.classList.remove('hidden');
 
-                    // iOSかどうかの判定
-                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                    // クリックイベントの設定
+                    installBtn.onclick = async () => {
+                        // iOS判定
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-                    if (isIOS) {
-                        // iOSの場合: インストールボタンは作れないので手順を表示
-                        installBtn.classList.add('hidden');
-                        iosInstruction.classList.remove('hidden');
-                    } else {
-                        // Android/PCの場合: beforeinstallpromptが来ていればボタンを表示
-                        iosInstruction.classList.add('hidden');
-                        if (deferredPrompt) {
-                            installBtn.classList.remove('hidden');
+                        if (isIOS) {
+                            // ▼ iOSの場合: 全画面オーバーレイを表示して誘導する
+                            iosOverlay.classList.remove('hidden');
+                            iosOverlay.style.display = 'flex'; // flexで表示
+                            // アイコン再生成(オーバーレイ内のアイコン用)
+                            if(window.lucide) lucide.createIcons({ root: iosOverlay });
                         } else {
-                            // イベントが来てない場合（既にインストール済みでブラウザで開いた場合など）
-                            // 念のため案内だけ出す
-                            installBtn.classList.add('hidden');
-                            // 文言を変えるなどの微調整が可能
+                            // ▼ Android/PCの場合: ネイティブのインストールプロンプトを出す
+                            if (deferredPrompt) {
+                                deferredPrompt.prompt();
+                                const { outcome } = await deferredPrompt.userChoice;
+                                console.log(`User response: ${outcome}`);
+                                deferredPrompt = null;
+                            } else {
+                                // 万が一プロンプトが出せない場合（既にインストール済みなど）
+                                alert('ブラウザのメニューから「ホーム画面に追加」を選択してください。');
+                            }
                         }
-                    }
+                    };
                 }
-                // アイコン更新
-                if(window.lucide) lucide.createIcons(); 
             };
-
-            // 3. Android用インストールボタンのクリックイベント
-            document.getElementById('pwa-install-btn').addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`User response to the install prompt: ${outcome}`);
-                    deferredPrompt = null;
-                }
-            });
 
             // 4. 初期実行とリサイズ監視
             checkPwaStatus();
             window.matchMedia('(display-mode: standalone)').addEventListener('change', checkPwaStatus);
+            // ==========================================
+            // ▲▲▲ 改修ここまで ▲▲▲
+            // ==========================================
             
             init();
         });
     </script>
+    <div id="ios-install-overlay" class="fixed inset-0 z-[9999] bg-black/90 text-white hidden flex-col items-center justify-end pb-10 animate-fadeIn" onclick="this.classList.add('hidden')">
+        
+        <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
+            <div class="mb-6">
+                <img src="SQ_logo.png" alt="Icon" class="w-20 h-20 rounded-2xl shadow-2xl mx-auto mb-4 border border-white/20">
+                <h3 class="text-2xl font-bold mb-2">ホーム画面に追加</h3>
+                <p class="text-gray-300 text-sm">
+                    このアプリはホーム画面から<br>
+                    全画面で動作するように設計されています。
+                </p>
+            </div>
+
+            <div class="space-y-4 text-left bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-sm">
+                <div class="flex items-center">
+                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3">1</span>
+                    <p class="text-sm">画面下部の <i data-lucide="share" class="inline w-4 h-4 mx-1"></i> (共有) をタップ</p>
+                </div>
+                <div class="flex items-center">
+                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3">2</span>
+                    <p class="text-sm">メニューの「ホーム画面に追加」を選択</p>
+                </div>
+                <div class="flex items-center">
+                    <span class="w-6 h-6 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs mr-3">3</span>
+                    <p class="text-sm">右上の「追加」をタップして完了</p>
+                </div>
+            </div>
+            
+            <p class="mt-8 text-gray-500 text-xs font-bold">画面をタップして閉じる</p>
+        </div>
+
+        <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center animate-bounce pointer-events-none">
+            <p class="text-sm font-bold mb-2">ここをタップ</p>
+            <i data-lucide="arrow-down" class="w-8 h-8 text-white"></i>
+        </div>
+    </div>
 </body>
 </html>
