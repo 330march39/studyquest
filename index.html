@@ -1040,6 +1040,14 @@
         .animate-gradient-xy {
             background-size: 200% 200%;
             animation: gradient-xy 6s ease infinite;
+            
+            /* ▼▼▼ 追加: スマホでの描画バグ対策 ▼▼▼ */
+            will-change: background-position; /* ブラウザに変化を予告 */
+            transform: translate3d(0, 0, 0);  /* GPUを使用させるおまじない */
+            -webkit-transform: translate3d(0, 0, 0);
+            -webkit-backface-visibility: hidden; /* チラつき防止 */
+            backface-visibility: hidden;
+            perspective: 1000px;
         }
     </style>
 </head>
