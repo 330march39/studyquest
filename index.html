@@ -3034,11 +3034,12 @@
                             countdownContainer.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">右上の「+」ボタンでテストなどの日程を追加できます。</p>`;
                         } else {
                             countdownContainer.innerHTML = state.countdowns.map(cd => {
-                                const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                                const targetStart = new Date(cd.date);
-                                targetStart.setHours(0,0,0,0);
-                                const diffTime = targetStart - todayStart;
-                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              const now = new Date();
+                              const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                              const targetStart = new Date(cd.date);
+                              targetStart.setHours(0, 0, 0, 0);
+                              const diffTime = targetStart - todayStart;
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                                 const dayText = diffDays > 0 ? `あと <span class="text-2xl font-bold primary-text">${diffDays}</span> 日` : diffDays === 0 ? `<span class="text-xl font-bold text-red-500">今日です！</span>` : `<span class="text-gray-500">終了</span>`;
                                 
                                 // ★変更点: 全体を button タグにするか、onclick を設定する
