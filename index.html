@@ -1071,9 +1071,7 @@
             
                     <div class="relative z-10 p-5 flex items-center justify-between text-white">
                         <div class="flex items-center space-x-4">
-                            <div class="bg-white/20 p-3 rounded-full backdrop-blur-md shadow-inner border border-white/30">
-                                <img src="coin.png" alt="Coin" class="w-8 h-8 object-contain drop-shadow-md">
-                            </div>
+                            <img src="coin.png" alt="Coin" class="w-14 h-14 object-contain drop-shadow-md">
                             <div class="text-left">
                                 <p class="text-xs font-bold text-yellow-100 uppercase tracking-widest opacity-90">Current Points</p>
                                 <p class="text-3xl font-black tracking-tighter drop-shadow-sm flex items-baseline">
@@ -1988,14 +1986,21 @@
             <div class="flex-1"></div>
         </header>
 
-        <div class="bg-gray-50 dark:bg-gray-800/50 p-6 text-center flex-shrink-0">
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">現在のラーニングポイント</p>
+        <div class="relative p-6 text-center flex-shrink-0 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-500 animate-gradient-xy"></div>
+            <div class="absolute inset-0 bg-white/10 backdrop-blur-[1px]"></div>
             
-            <div class="flex items-center justify-center space-x-3 mb-1">
-                <img src="coin.png" alt="Coin" class="w-12 h-12 object-contain drop-shadow-md">
-                <p class="text-5xl font-bold primary-text" id="status-lp-display">0</p>
+            <div class="relative z-10 text-white">
+                <p class="text-xs font-bold text-yellow-100 uppercase tracking-widest opacity-90 mb-2">Current Points</p>
+                
+                <div class="flex items-center justify-center space-x-3 mb-1">
+                    <div class="bg-white/20 p-2 rounded-full backdrop-blur-md border border-white/30">
+                        <img src="coin.png" alt="Coin" class="w-10 h-10 object-contain drop-shadow-md">
+                    </div>
+                    <p class="text-5xl font-black tracking-tighter drop-shadow-sm text-white" id="status-lp-display">0</p>
+                </div>
+                <p class="text-xs font-bold opacity-80 mt-2 text-white">学習してLPを貯め、アイテムと交換しよう</p>
             </div>
-            <p class="text-xs text-gray-400 mt-2">学習してLPを貯め、アイテムと交換しよう</p>
         </div>
 
         <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 overflow-x-auto">
