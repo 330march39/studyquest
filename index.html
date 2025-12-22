@@ -5228,7 +5228,7 @@
             }
         };
 
-        // 休憩用iframeを開く関数（ローディング制御付き）
+        // 休憩用iframeを開く関数（修正版：フリーズ対策・権限強化）
             function openIframe(url) {
                 const container = $('#game-container');
                 const overlay = $('#iframe-overlay');
@@ -5239,9 +5239,18 @@
 
                 // iframeを作成
                 const iframe = document.createElement('iframe');
-                iframe.id = 'break-iframe'; // IDは維持
+                iframe.id = 'break-iframe';
                 iframe.className = 'w-full h-full absolute inset-0 opacity-0 transition-opacity duration-300';
-                iframe.sandbox = 'allow-scripts allow-forms allow-popups';
+                
+                // ▼▼▼ 修正点1: sandboxの権限を強化 (allow-same-originなどを追加) ▼▼▼
+                // allow-same-origin: ゲームがローカルストレージを使ってセーブなどをする場合に必須
+                // allow-presentation / allow-orientation-lock: 画面制御系
+                iframe.sandbox = 'allow-scripts allow-forms allow-popups allow-same-origin allow-modals allow-presentation allow-orientation-lock';
+                
+                // ▼▼▼ 修正点2: ゲームパフォーマンス用の許可属性を追加 ▼▼▼
+                // これによりGPUの使用などがスムーズになる場合があります
+                iframe.allow = "autoplay; fullscreen; gyroscope; accelerometer; clipboard-write";
+                
                 iframe.style.border = '0';
                 iframe.src = url;
 
@@ -5252,7 +5261,7 @@
                     iframe.classList.add('opacity-100');
                 };
 
-                container.appendChild(iframe); // コンテナに追加
+                container.appendChild(iframe);
                 lucide.createIcons();
             };
         
@@ -5261,7 +5270,7 @@
                 const iframe = document.getElementById('break-iframe');
                 const overlay = $('#iframe-overlay');
                 
-                // iframeが存在すれば削除（これで前回の画面は消滅する）
+                // iframeが存在すれば削除
                 if (iframe) {
                     iframe.remove();
                 }
