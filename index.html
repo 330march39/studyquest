@@ -3963,7 +3963,14 @@
                     
                     // 1. 進捗データを保存
                     state.progress[quizId] = { level, date: new Date().toISOString() };
-                    addLP(level * 5, 'クイズ評価');
+                    // クエストと同様に「1分 = 1LP」で計算
+                    const earnedLP = Math.floor(currentQuizElapsed / 60);
+                    
+                    if (earnedLP > 0) {
+                        addLP(earnedLP, 'クイズ実施');
+                    }
+                    
+                    currentQuizElapsed = 0; // 使い終わったらリセット
                     saveState();
                     
                     // 2. ★重要★ 現在のアクティブなページを強制的に再描画する
@@ -6056,6 +6063,7 @@
 
             // ▼▼▼ 追加: 外部ブラウザからの復帰検知用 ▼▼▼
             let isQuizExternalOpen = false; // クイズで外部に行っているかどうかのフラグ
+            let currentQuizElapsed = 0;
 
             // アプリに戻ってきた（タブがアクティブになった）時の処理
             document.addEventListener('visibilitychange', () => {
@@ -6070,6 +6078,7 @@
                     if (quizTimer.startTime) {
                         const elapsed = Math.round((Date.now() - quizTimer.startTime) / 1000);
                         recordSession(title, elapsed);
+                        currentQuizElapsed = elapsed;
                         quizTimer.startTime = null;
                         saveState();
                     }
