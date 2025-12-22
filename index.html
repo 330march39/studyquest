@@ -3907,76 +3907,19 @@
 
             document.body.addEventListener('click', e => {
                 const quizCard = e.target.closest('.quiz-card');
-            if (quizCard && !e.target.closest('.pin-btn')) {
-                const quiz = initialData.quizzes.find(q => q.id === quizCard.dataset.id);
-                
-                // データをセット
-                currentQuizId = quiz.id;
-                $('#quiz-screen-title').textContent = quiz.title;
-                
-                // ★ページを開く（計測開始）
-                quizPage.open();
-                quizTimer.startTime = Date.now();
-                
-                // コンテナをクリア
-                const container = $('#quiz-container');
-                container.innerHTML = ''; 
-
-                // ▼▼▼ 変更: 外部ブラウザ起動 ＋ アプリ内は待機画面を表示 ▼▼▼
-                
-                // 1. 外部ブラウザで開く
-                if (quiz.url) {
-                    window.open(quiz.url, '_blank');
+                if (quizCard && !e.target.closest('.pin-btn')) {
+                    const quiz = initialData.quizzes.find(q => q.id === quizCard.dataset.id);
+                    
+                    if (quiz && quiz.url) {
+                        // 1. 計測用の状態をセット
+                        currentQuizId = quiz.id;
+                        quizTimer.startTime = Date.now();
+                        isQuizExternalOpen = true; // ★ここ重要: 「外部に行っている」フラグを立てる
+    
+                        // 2. 外部ブラウザで開く (サブページ遷移はしない)
+                        window.open(quiz.url, '_blank');
+                    }
                 }
-
-                // 2. アプリ内画面の構築（待機・完了ボタン）
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full p-6 text-center space-y-8 animate-fadeIn">
-                        <div class="relative">
-                            <div class="w-24 h-24 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center animate-pulse">
-                                <i data-lucide="external-link" class="w-10 h-10 text-indigo-500"></i>
-                            </div>
-                            <div class="absolute -bottom-2 -right-2 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg border border-gray-100 dark:border-gray-700">
-                                <i data-lucide="globe" class="w-6 h-6 text-gray-500"></i>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">外部ブラウザで開いています</h3>
-                            <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-                                クイズの回答が終わったら、<br>
-                                下のボタンを押して学習を記録しましょう。
-                            </p>
-                        </div>
-
-                        <div class="w-full max-w-xs space-y-4">
-                            <button id="quiz-complete-btn" class="w-full primary-bg primary-bg-hover text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center text-lg">
-                                <i data-lucide="check-circle" class="w-6 h-6 mr-2"></i>
-                                完了・評価へ
-                            </button>
-
-                            <button id="quiz-reopen-btn" class="w-full text-indigo-500 dark:text-indigo-400 font-bold py-2 text-sm flex items-center justify-center hover:opacity-70 transition-opacity">
-                                <i data-lucide="refresh-cw" class="w-4 h-4 mr-1"></i>
-                                ページをもう一度開く
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                // アイコン生成
-                lucide.createIcons({ root: container });
-
-                // ボタンイベント設定
-                container.querySelector('#quiz-complete-btn').addEventListener('click', () => {
-                    // クイズ画面を閉じる -> 既存のonClose処理が走り、評価モーダルが出る
-                    quizPage.close();
-                });
-
-                container.querySelector('#quiz-reopen-btn').addEventListener('click', () => {
-                    if (quiz.url) window.open(quiz.url, '_blank');
-                });
-                // ▲▲▲ 変更ここまで ▲▲▲
-            }
                 const pinBtn = e.target.closest('.pin-btn');
                 if(pinBtn) {
                     const quizId = pinBtn.dataset.id;
@@ -6110,6 +6053,36 @@
                 }
                 lucide.createIcons();
             };
+
+            // ▼▼▼ 追加: 外部ブラウザからの復帰検知用 ▼▼▼
+            let isQuizExternalOpen = false; // クイズで外部に行っているかどうかのフラグ
+
+            // アプリに戻ってきた（タブがアクティブになった）時の処理
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && isQuizExternalOpen && currentQuizId) {
+                    isQuizExternalOpen = false; // フラグをリセット
+
+                    // クイズデータを特定
+                    const quiz = initialData.quizzes.find(q => q.id === currentQuizId);
+                    const title = quiz ? quiz.title : 'クイズ';
+
+                    // 時間計測と記録
+                    if (quizTimer.startTime) {
+                        const elapsed = Math.round((Date.now() - quizTimer.startTime) / 1000);
+                        recordSession(title, elapsed);
+                        quizTimer.startTime = null;
+                        saveState();
+                    }
+
+                    // 評価モーダルを表示
+                    $('#assessment-modal').dataset.quizId = currentQuizId;
+                    openModalWithAnim('assessment-modal', 'assessment-content');
+                    
+                    // IDリセットはモーダル表示後に行うため、ここでは保持
+                    // (モーダル内のボタン処理で完了時にリセットされる想定、またはこのままでも上書きされるのでOK)
+                }
+            });
+            // ▲▲▲ 追加ここまで ▲▲▲
 
             const init = () => {
                 if (window.Chart) {
