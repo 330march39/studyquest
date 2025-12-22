@@ -2180,6 +2180,29 @@
             </div>
         </div>
     </div>
+
+    <div id="feedback-reward-modal" class="hidden fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div id="feedback-reward-content" class="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl transform scale-95 transition-transform duration-300">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">ご意見ありがとうございます！</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                送信完了画面に表示されたコードを入力して<br>お礼のLPを受け取ってください。
+            </p>
+            
+            <div class="mb-6">
+                <input type="text" id="feedback-code-input" placeholder="コードを入力 (例: SQ00)" class="w-full text-center text-2xl font-bold tracking-widest p-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:border-indigo-500 uppercase transition-colors">
+                <p id="feedback-code-error" class="text-red-500 text-xs font-bold mt-2 hidden">コードが間違っています</p>
+            </div>
+
+            <div class="flex space-x-3">
+                <button id="feedback-code-cancel" class="flex-1 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    閉じる
+                </button>
+                <button id="feedback-code-submit" class="flex-1 py-3 rounded-xl font-bold text-white primary-bg primary-bg-hover shadow-lg transition-transform active:scale-95">
+                    受け取る
+                </button>
+            </div>
+        </div>
+    </div>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -2307,6 +2330,7 @@
 
             let state;
             let chartInstances = {};
+            let isFeedbackMode = false;
             let breakSortable = null;
             let focusTimer = { interval: null, defaultTime: 0, timeLeft: 0, isRunning: false, isPaused: false };
             let stopwatch = { interval: null, startTime: 0, elapsedTime: 0, isRunning: false, isPaused: false };
@@ -2744,7 +2768,8 @@
                         name: 'ゲスト',
                         icon: '🙂',
                         grade: '',
-                        id: Math.random().toString(36).substring(2, 9) // 簡易ID
+                        id: Math.random().toString(36).substring(2, 9), // 簡易ID
+                        feedbackRewardClaimed: false
                     },
                     profile: { 
                         lp: 0, 
@@ -3379,6 +3404,18 @@
                         }));
                         
                         settingsPage.appendChild(questList);
+
+                        settingsPage.appendChild(createSectionTitle('その他'));
+                        const otherList = createListContainer();
+                        
+                        // 意見を送るボタン
+                        otherList.appendChild(createListItem('mail', '意見を送る（バグ・アイデア）', 'bg-gray-500', () => {
+                            // フラグを立ててiframeを開く
+                            isFeedbackMode = true; 
+                            openIframe('https://forms.gle/5JRuBNTfV65rhvkf7');
+                        }));
+                        
+                        settingsPage.appendChild(otherList);
 
                         // --- アイコン生成 ---
                         lucide.createIcons();
@@ -4461,7 +4498,33 @@
                     }
                 });
             }
-            closeIframeBtn.addEventListener('click', closeIframe);
+            // 既存の closeIframeBtn イベントリスナーを修正、または以下のようにロジックを追加
+            closeIframeBtn.addEventListener('click', () => {
+                closeIframe();
+
+                // ▼▼▼ 追加: 意見フォームから戻ってきた場合の処理 ▼▼▼
+                if (isFeedbackMode) {
+                    isFeedbackMode = false; // フラグをリセット
+
+                    // まだ報酬を受け取っていない場合のみモーダルを表示
+                    if (!state.user.feedbackRewardClaimed) {
+                        const modal = $('#feedback-reward-modal');
+                        const content = $('#feedback-reward-content');
+                        const input = $('#feedback-code-input');
+                        
+                        input.value = ''; // 入力をクリア
+                        $('#feedback-code-error').classList.add('hidden'); // エラー非表示
+
+                        modal.classList.remove('hidden');
+                        requestAnimationFrame(() => {
+                            modal.classList.remove('opacity-0');
+                            content.classList.remove('scale-95');
+                            content.classList.add('scale-100');
+                        });
+                    }
+                }
+                // ▲▲▲ 追加ここまで ▲▲▲
+            });
 
             /* ▲▲▲ 追加: クエスト機能のイベントリスナー ▲▲▲ */
             
@@ -6126,6 +6189,58 @@
                     // IDリセットはモーダル表示後に行うため、ここでは保持
                     // (モーダル内のボタン処理で完了時にリセットされる想定、またはこのままでも上書きされるのでOK)
                 }
+            });
+            // ▲▲▲ 追加ここまで ▲▲▲
+
+            // ▼▼▼ 追加: 意見送信お礼モーダルのロジック ▼▼▼
+            const feedbackModal = $('#feedback-reward-modal');
+            const feedbackContent = $('#feedback-reward-content');
+            const feedbackInput = $('#feedback-code-input');
+            const feedbackError = $('#feedback-code-error');
+
+            // モーダルを閉じる関数
+            const closeFeedbackModal = () => {
+                feedbackModal.classList.add('opacity-0');
+                feedbackContent.classList.remove('scale-100');
+                feedbackContent.classList.add('scale-95');
+                setTimeout(() => {
+                    feedbackModal.classList.add('hidden');
+                }, 300);
+            };
+
+            // 「閉じる」ボタン
+            $('#feedback-code-cancel').addEventListener('click', closeFeedbackModal);
+
+            // 「受け取る」ボタン
+            $('#feedback-code-submit').addEventListener('click', () => {
+                const code = feedbackInput.value.trim().toUpperCase(); // 大文字に変換して取得
+
+                if (code === 'SQ39') {
+                    // 正解の場合
+                    addLP(500, '意見送信のお礼'); // 500LP付与
+                    state.user.feedbackRewardClaimed = true; // 受け取り済みにする
+                    saveState();
+                    
+                    showToast('500LPを受け取りました！ご協力ありがとうございます！');
+                    closeFeedbackModal();
+                } else {
+                    // 不正解の場合
+                    feedbackError.classList.remove('hidden');
+                    feedbackInput.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+                    // アニメーションで揺らす
+                    feedbackContent.animate([
+                        { transform: 'translateX(0)' },
+                        { transform: 'translateX(-5px)' },
+                        { transform: 'translateX(5px)' },
+                        { transform: 'translateX(0)' }
+                    ], { duration: 200 });
+                }
+            });
+
+            // 入力し直したらエラーを消す
+            feedbackInput.addEventListener('input', () => {
+                feedbackError.classList.add('hidden');
+                feedbackInput.classList.remove('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
             });
             // ▲▲▲ 追加ここまで ▲▲▲
 
