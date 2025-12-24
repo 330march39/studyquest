@@ -4038,11 +4038,26 @@
                     
                     // 1. 進捗データを保存
                     state.progress[quizId] = { level, date: new Date().toISOString() };
+                    
+                    // クイズの情報を取得してタイトルを決める
+                    const quizObj = initialData.quizzes.find(q => q.id === quizId);
+                    const title = quizObj ? quizObj.title : 'クイズ';
+
+                    // 学習ログ（リスト）に追加
+                    if (currentQuizElapsed > 0) {
+                        recordSession(title, currentQuizElapsed);
+                        // グラフ用集計データに追加 ('quiz' タイプとして記録)
+                        logStudyTime('quiz', currentQuizElapsed);
+                        
+                        // 総合計時間も更新（もしstate.focus.totalTimeで管理しているなら）
+                        state.focus.totalTime += currentQuizElapsed;
+                    }
+                    
                     // クエストと同様に「1分 = 1LP」で計算
                     const earnedLP = Math.floor(currentQuizElapsed / 60);
                     
                     if (earnedLP > 0) {
-                        addLP(earnedLP, 'クイズ実施');
+                        addLP(earnedLP, 'クイズ');
                     }
                     
                     currentQuizElapsed = 0; // 使い終わったらリセット
