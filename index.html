@@ -1257,7 +1257,7 @@
                             <input type="checkbox" id="bgm-toggle" class="toggle-checkbox">
                         </div>
                     </h3>
-                    <p class="text-xs text-gray-500 mb-4">ONにすると、クエストの「学習セクション」中に選択した曲がループ再生されます。</p>
+                    <p class="text-xs text-gray-500 mb-4">ONにすると、クエストのセクション中に選択した曲がループ再生されます。</p>
                     
                     <h4 class="text-sm font-bold mb-2">プレイリスト</h4>
                     <div id="playlist-container" class="space-y-2 mb-4">
@@ -1307,9 +1307,9 @@
                     <i data-lucide="home" class="w-6 h-6 mb-0.5"></i>
                     <span class="text-[10px] font-bold">ホーム</span>
                 </button>
-                <button class="tab-btn flex flex-col items-center justify-center w-full h-full transition-colors" data-page="study-page" data-title="学習">
+                <button class="tab-btn flex flex-col items-center justify-center w-full h-full transition-colors" data-page="study-page" data-title="教材">
                     <i data-lucide="book-marked" class="w-6 h-6 mb-0.5"></i>
-                    <span class="text-[10px] font-bold">学習</span>
+                    <span class="text-[10px] font-bold">教材</span>
                 </button>
             </div>
 
@@ -1379,12 +1379,12 @@
     <div id="registration-screen" class="fixed inset-0 z-[200] bg-gray-100 dark:bg-gray-900 flex flex-col px-6 pb-6 transition-all duration-300 opacity-0 pointer-events-none transform scale-95" style="padding-top: calc(1.5rem + env(safe-area-inset-top));">
         <header class="flex items-center mb-6">
             <button id="reg-back-btn" class="p-2 -ml-2"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
-            <h2 class="text-xl font-bold ml-2">プロフィール設定</h2>
+            <h2 class="text-xl font-bold ml-2">プロフィールを設定しよう！</h2>
         </header>
         
         <div class="flex-grow flex flex-col items-center space-y-6 max-w-sm mx-auto w-full">
             <div class="text-center">
-                <label class="block text-sm font-bold mb-2 text-gray-500">アイコン (絵文字)</label>
+                <label class="block text-sm font-bold mb-2 text-gray-500">アイコン</label>
                 <div class="relative inline-block">
                     <input type="text" id="reg-icon" class="w-24 h-24 text-center text-6xl border-2 border-dashed border-gray-300 rounded-full focus:outline-none focus:border-indigo-500 bg-white dark:bg-gray-800" value="🎓" readonly>
                     <div class="absolute -bottom-2 -right-2 bg-blue-500 text-white p-2 rounded-full shadow cursor-pointer" id="icon-picker-btn">
@@ -1659,7 +1659,7 @@
                     </h3>
                     <input type="checkbox" id="bgm-toggle-sub" class="toggle-checkbox">
                 </div>
-                <p class="text-xs text-gray-500">ONにすると、クエストの「学習セクション」中に以下のリスト順で再生されます。</p>
+                <p class="text-xs text-gray-500">ONにすると、クエストのセクション中に以下のリスト順で再生されます。</p>
             </div>
 
             <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow mb-4">
@@ -1703,11 +1703,11 @@
                 <div class="flex justify-between mt-4 gap-3">
                     <button id="add-section-btn" class="flex-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-3 px-4 rounded-xl shadow-sm flex items-center justify-center transition-transform active:scale-95">
                         <i data-lucide="plus" class="w-5 h-5 mr-2 text-indigo-500"></i>
-                        <span>学習枠を追加</span>
+                        <span>セクション</span>
                     </button>
                     <button id="add-break-btn" class="flex-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-3 px-4 rounded-xl shadow-sm flex items-center justify-center transition-transform active:scale-95">
                         <i data-lucide="coffee" class="w-5 h-5 mr-2 text-green-500"></i>
-                        <span>休憩を追加</span>
+                        <span>ブレイクタイム</span>
                     </button>
                 </div>
             </div>
@@ -1794,7 +1794,7 @@
         </header>
         
         <div class="flex-grow overflow-y-auto p-4 pb-safe bg-gray-100 dark:bg-gray-900">
-            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">休憩中に表示するアプリやWebサイトを設定します。</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">休憩中に表示するゲームなどを設定します。</p>
 
             <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 px-1">表示中 (ドラッグで並び替え)</h4>
             <div id="break-active-list" class="w-full space-y-2"></div>
@@ -1885,10 +1885,10 @@
 
         <div class="flex justify-between mt-4">
             <button id="routine-add-section-btn" class="flex-1 mr-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center">
-                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>学習枠 (変数)
+                <i data-lucide="plus" class="w-4 h-4 mr-2"></i>セクション
             </button>
             <button id="routine-add-break-btn" class="flex-1 ml-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-2 px-4 rounded-lg shadow-sm flex items-center justify-center">
-                <i data-lucide="coffee" class="w-4 h-4 mr-2"></i>休憩
+                <i data-lucide="coffee" class="w-4 h-4 mr-2"></i>ブレイクタイム
             </button>
         </div>
     </div>
@@ -2005,7 +2005,7 @@
             <div class="flex space-x-2 pb-1" id="status-tabs-container">
                 <button class="status-tab-btn active primary-bg text-white px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-target="theme">テーマカラー</button>
                 <button class="status-tab-btn bg-gray-200 dark:bg-gray-600 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-target="background">壁紙</button>
-                <button class="status-tab-btn bg-gray-200 dark:bg-gray-600 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-target="game">ミニゲーム</button>
+                <button class="status-tab-btn bg-gray-200 dark:bg-gray-600 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-target="game">ゲーム</button>
                 <button class="status-tab-btn bg-gray-200 dark:bg-gray-600 px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors" data-target="music">BGM</button>
             </div>
         </div>
@@ -6682,7 +6682,7 @@
                     categoryName = '壁紙';
                 } else if (type === 'game') {
                     itemData = initialData.games[id];
-                    categoryName = 'ミニゲーム';
+                    categoryName = 'ゲーム';
                 } else if (type === 'music') {
                     itemData = initialData.music[id];
                     categoryName = 'BGM';
