@@ -4575,15 +4575,25 @@
             }));
             // ▲▲▲ 修正ここまで ▲▲▲
 
-            $('#mini-timer-bar').addEventListener('click', (e) => {
-                if (e.target.closest('#close-mini-timer-btn')) return;
-                document.querySelector('.tab-btn[data-page="focus-page"]').click();
-            });
-
-            $('#close-mini-timer-btn').addEventListener('click', () => {
-                miniTimerTemporarilyHidden = true; // フラグを立てる
-                $('#mini-timer-container').classList.remove('visible'); // 非表示にする
-            });
+            // ▼▼▼ 修正版: 要素が存在するか確認してからイベントを設定する ▼▼▼
+            const miniTimerBar = $('#mini-timer-bar');
+            if (miniTimerBar) {
+                miniTimerBar.addEventListener('click', (e) => {
+                    if (e.target.closest('#close-mini-timer-btn')) return;
+                    const focusTab = document.querySelector('.tab-btn[data-page="focus-page"]');
+                    if (focusTab) focusTab.click();
+                });
+            }
+            
+            const closeMiniTimerBtn = $('#close-mini-timer-btn');
+            if (closeMiniTimerBtn) {
+                closeMiniTimerBtn.addEventListener('click', () => {
+                    miniTimerTemporarilyHidden = true;
+                    const container = $('#mini-timer-container');
+                    if (container) container.classList.remove('visible');
+                });
+            }
+            // ▲▲▲ 修正ここまで ▲▲▲
 
             // --- Countdown Logic ---
             // 1. サブページのインスタンス化
