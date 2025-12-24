@@ -6898,8 +6898,7 @@
                                 state.profile.activeTheme = themeId;
                                 saveState();
                                 
-                                // 2. 全体の見た目を更新 (ここでapplyThemeColorが呼ばれ、dark色が適用される)
-                                updateAppearance();
+                                applyThemeColor();
                                 
                                 // 3. パレットの選択表示を更新するために再描画
                                 renderThemes();
