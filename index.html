@@ -6874,7 +6874,7 @@
                         updateAppearance(); // 即座に反映
                     };
             
-                    // --- 3. カラーパレットの描画 (ここは元のまま) ---
+                    // --- 3. カラーパレットの描画 (修正版) ---
                     const renderThemes = () => {
                         container.innerHTML = state.profile.unlockedThemes.map(id => {
                             const theme = initialData.themes[id];
@@ -6889,34 +6889,19 @@
                         
                         lucide.createIcons();
             
+                        // イベントリスナーの設定（ここをシンプルに修正）
                         container.querySelectorAll('.theme-btn').forEach(btn => {
                             btn.addEventListener('click', () => {
                                 const themeId = btn.dataset.theme;
+                                
+                                // 1. 状態を更新して保存
                                 state.profile.activeTheme = themeId;
                                 saveState();
+                                
+                                // 2. 全体の見た目を更新 (ここでapplyThemeColorが呼ばれ、dark色が適用される)
                                 updateAppearance();
                                 
-                                const theme = initialData.themes[themeId];
-                                if (theme) {
-                                    container.querySelectorAll('.theme-btn').forEach(btn => {
-                                        btn.addEventListener('click', () => {
-                                            const themeId = btn.dataset.theme;
-                                            state.profile.activeTheme = themeId;
-                                            saveState();
-                                            
-                                            // 1. 全体の見た目（ダークモード有無など）を更新
-                                            updateAppearance(); 
-                                            
-                                            renderThemes();
-                                        });
-                                    });
-                                    
-                                    // ライトモード時のみステータスバー色も変更（任意）
-                                    const metaThemeColor = document.getElementById('meta-theme-color');
-                                    if (metaThemeColor && !document.documentElement.classList.contains('dark')) {
-                                        // metaThemeColor.setAttribute('content', theme.color); 
-                                    }
-                                }
+                                // 3. パレットの選択表示を更新するために再描画
                                 renderThemes();
                             });
                         });
