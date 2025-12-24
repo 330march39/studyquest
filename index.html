@@ -2826,7 +2826,7 @@
                 const isDark = document.documentElement.classList.contains('dark');
                 
                 // ダークモードなら dark プロパティ、そうでなければ color プロパティを使用
-                const targetColor = isDark ? theme.dark : theme.color;
+                const targetColor = (isDark && theme.dark) ? theme.dark : theme.color;
             
                 // 変数を更新 (hover用変数にも同じ色を入れることでホバー変化を完全に無効化)
                 document.documentElement.style.setProperty('--primary-color', targetColor);
