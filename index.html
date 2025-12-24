@@ -4187,18 +4187,6 @@
                 }
             });
             
-            /* 変更後 (新しいイベントリスナーとして追加) */
-            $('#background-scope-toggle').addEventListener('change', (e) => {
-                state.settings.backgroundScopeGlobal = e.target.checked;
-                saveState();
-                updateAppearance();
-                updateBackgrounds();
-                // 集中タブが表示されている場合に備えて再描画
-                if ($('#focus-page').classList.contains('active')) {
-                    renderEngine.pages['focus-page']();
-                }
-            });
-            
             // --- Focus Page Logic ---
             const updateMiniTimer = () => {
                 if (miniTimerTemporarilyHidden) {
