@@ -6156,19 +6156,27 @@
                     
                     // --- 既存のクイズ復帰処理 ---
                     if (isQuizExternalOpen && currentQuizId) {
-                       isQuizExternalOpen = false; // フラグをリセット
-
-                        // クイズデータを特定
-                        const quiz = initialData.quizzes.find(q => q.id === currentQuizId);
-                        const title = quiz ? quiz.title : 'クイズ';
-    
-                        // 時間計測と記録
+                        // 1. 時間を計算
                         if (quizTimer.startTime) {
-                            const elapsed = Math.round((Date.now() - quizTimer.startTime) / 1000);
-                            recordSession(title, elapsed);
+                            const now = Date.now();
+                            const elapsed = Math.round((now - quizTimer.startTime) / 1000);
+                            
+                            // ★重要: ここでLP計算用の変数に時間をセットする
                             currentQuizElapsed = elapsed;
+
+                            // 2. 評価モーダルを表示
+                            $('#assessment-modal').dataset.quizId = currentQuizId;
+                            openModalWithAnim('assessment-modal', 'assessment-content');
+
+                            // 3. タイマーリセット
                             quizTimer.startTime = null;
-                            saveState();
+                        }
+                        // フラグを下ろす
+                        isQuizExternalOpen = false;
+                        // IDは評価ボタンを押すまで保持するか、ここで消して評価時に参照するかですが、
+                        // 評価モーダル側で dataset.quizId を使うのでここは保持でもOKですが、二重起動防止のためnullにするなら評価ロジック注意
+                        // 今回は assessment-modal の dataset に入れたので currentQuizId は null にしても大丈夫です
+                        // currentQuizId = null; 
                     }
 
                     // --- ▼▼▼ 追加: 意見フォームからの復帰処理 ▼▼▼ ---
