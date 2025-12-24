@@ -6908,8 +6908,10 @@
                                             state.profile.activeTheme = themeId;
                                             saveState();
                                             
-                                            // ★修正: 個別にsetPropertyせず、作成した関数を呼ぶ
-                                            // これにより、現在のモード(dark/light)を判定して正しい色がセットされます
+                                            // 1. 全体の見た目（ダークモード有無など）を更新
+                                            updateAppearance(); 
+                                    
+                                            // 2. ★ここで色を適用する関数を呼ぶだけにする（直接 setProperty しない！）
                                             applyThemeColor(); 
                                             
                                             renderThemes();
