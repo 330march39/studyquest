@@ -181,7 +181,7 @@
         #loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid var(--primary-color); width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .primary-bg { background-color: var(--primary-color); }
-        .primary-bg-hover:hover { background-color: var(--primary-color-hover); }
+        
         .primary-text { color: var(--primary-color); }
         .toggle-checkbox { appearance: none; width: 40px; height: 20px; background: #ccc; border-radius: 20px; position: relative; cursor: pointer; transition: background .3s; }
         .toggle-checkbox:before { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform .3s; }
@@ -2258,9 +2258,9 @@
                 ],
                 
                 themes: {
-                    default: { name: 'デフォルト', color: '#28497A', hover: '#28497A', cost: 0 },
-                    green: { name: 'アクアミント', color: '#78CBBF', hover: '#78CBBF', cost: 1000 },
-                    red: { name: 'サンセット', color: '#4D4D90', hover: '#4D4D90', cost: 1500 },
+                    default: { name: 'デフォルト', color: '#28497A', dark: '#28497A', cost: 0 },
+                    green: { name: 'アクアミント', color: '#78CBBF', dark: '#78CBBF', cost: 1000 },
+                    red: { name: 'サンセット', color: '#4D4D90', dark: '#4D4D90', cost: 1500 },
                     orange: { name: 'ビタミン', color: '#f97316', hover: '#ea580c', cost: 2000 },
                     purple: { name: 'ミッドナイト', color: '#7c3aed', hover: '#6d28d9', cost: 2500 },
                     pink: { name: 'チェリー', color: '#db2777', hover: '#be185d', cost: 3000 },
@@ -2866,6 +2866,28 @@
             };
             
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
+
+            // ★新規追加: テーマカラーをモードに合わせて適用する関数
+            const applyThemeColor = () => {
+                const themeId = state.profile.activeTheme;
+                const theme = initialData.themes[themeId] || initialData.themes['default'];
+                
+                // 現在htmlタグに 'dark' クラスがついているか確認
+                const isDark = document.documentElement.classList.contains('dark');
+                
+                // ダークモードなら dark プロパティ、そうでなければ color プロパティを使用
+                const targetColor = isDark ? theme.dark : theme.color;
+            
+                // 変数を更新 (hover用変数にも同じ色を入れることでホバー変化を完全に無効化)
+                document.documentElement.style.setProperty('--primary-color', targetColor);
+                document.documentElement.style.setProperty('--primary-color-hover', targetColor);
+                
+                // ステータスバーの色も同期 (ライトモード時のみテーマ色、ダーク時は背景色)
+                const metaThemeColor = document.getElementById('meta-theme-color'); // もしmetaタグがあれば
+                if (metaThemeColor && !isDark) {
+                    // metaThemeColor.setAttribute('content', targetColor); // 必要であればコメントアウト解除
+                }
+            };
             
            // 修正箇所：updateAppearance 関数を以下のコードで上書きしてください
             const updateAppearance = () => {
@@ -2927,6 +2949,7 @@
                     const headerColor = (effectiveTone === 'dark') ? '#1f2937' : '#ffffff';
                     metaThemeColor.setAttribute('content', headerColor);
                 }
+                applyThemeColor();
             };
             
             const updateLpDisplay = () => {
@@ -6938,8 +6961,19 @@
                                 
                                 const theme = initialData.themes[themeId];
                                 if (theme) {
-                                    document.documentElement.style.setProperty('--primary-color', theme.color);
-                                    document.documentElement.style.setProperty('--primary-color-hover', theme.hover);
+                                    container.querySelectorAll('.theme-btn').forEach(btn => {
+                                        btn.addEventListener('click', () => {
+                                            const themeId = btn.dataset.theme;
+                                            state.profile.activeTheme = themeId;
+                                            saveState();
+                                            
+                                            // ★修正: 個別にsetPropertyせず、作成した関数を呼ぶ
+                                            // これにより、現在のモード(dark/light)を判定して正しい色がセットされます
+                                            applyThemeColor(); 
+                                            
+                                            renderThemes();
+                                        });
+                                    });
                                     
                                     // ライトモード時のみステータスバー色も変更（任意）
                                     const metaThemeColor = document.getElementById('meta-theme-color');
