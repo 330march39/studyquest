@@ -3498,7 +3498,7 @@
                 const listContainer = $('#study-session-list');
                 
                 if (sessions.length === 0) {
-                    listContainer.innerHTML = `<div class="flex flex-col items-center justify-center py-8 text-gray-400"><i data-lucide="book-off" class="w-8 h-8 mb-2"></i><p class="text-xs">記録がありません</p></div>`;
+                    listContainer.innerHTML = `<div class="flex flex-col items-center justify-center py-8 text-gray-400"><i data-lucide="book-x" class="w-8 h-8 mb-2"></i><p class="text-xs">記録がありません</p></div>`;
                 } else {
                     // 終了時刻の降順などで表示すると見やすい（ここでは記録順）
                     listContainer.innerHTML = sessions.map(s => {
