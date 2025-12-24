@@ -6488,12 +6488,8 @@
                 const applyItem = (id, type) => {
                     if (type === 'theme') {
                         state.profile.activeTheme = id;
-                        // 色を即座に反映させる処理
-                        const theme = initialData.themes[id];
-                        if (theme) {
-                            document.documentElement.style.setProperty('--primary-color', theme.color);
-                            document.documentElement.style.setProperty('--primary-color-hover', theme.hover);
-                        }
+                        // ▼ 修正: applyThemeColor() を呼ぶことで、ダークモード判定を含めて適用する
+                        applyThemeColor();
                     } else if (type === 'background') {
                         state.profile.activeBackground = id;
                         updateAppearance();  // ダークモード等の更新
