@@ -2851,7 +2851,7 @@
 
                 // 3. ログインボーナス処理 (元のロジックをそのまま流用)
                 if(state.user.isRegistered && state.lastLogin !== new Date().toDateString()){
-                    addLP(10000, 'ログインボーナス', true);
+                    addLP(500, 'ログインボーナス', true);
                     state.lastLogin = new Date().toDateString();
                     saveState();
                 }
@@ -4262,7 +4262,7 @@
             
                     const elapsed = focusTimer.defaultTime;
                     logStudyTime('focus', elapsed);
-                    addLP(Math.floor(elapsed/60), 'タイマー完了');
+                    addLP(Math.floor(elapsed/60), 'タイマー');
                     state.focus.totalTime += elapsed;
                     saveState();
                     resetTimerUI();
@@ -5461,7 +5461,7 @@
                     showToast('アプリを閉じている間にタイマーが終了しました');
                     new Notification('StudyQuest', { body: '集中タイマーが終了していました。' }); // 通知も出す
                     recordSession('タイマー', state.focus.duration);
-                    addLP(Math.floor(state.focus.duration / 60), 'タイマー完了');
+                    addLP(Math.floor(state.focus.duration / 60), 'タイマー');
                     resetTimerUI();
                     // 状態をクリア
                     state.focus.isRunning = false;
@@ -5600,7 +5600,7 @@
                 state.settings.themeMode = 'system';
 
                 // 初回ログインボーナス付与
-                addLP(10000, '初回ログインボーナス', true);
+                addLP(1000, '初回ログインボーナス', true);
                 state.lastLogin = new Date().toDateString();
 
                 saveState();
