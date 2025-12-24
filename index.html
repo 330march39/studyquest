@@ -6156,7 +6156,19 @@
                     
                     // --- 既存のクイズ復帰処理 ---
                     if (isQuizExternalOpen && currentQuizId) {
-                       // (省略: 既存のクイズ処理コードそのまま)
+                       isQuizExternalOpen = false; // フラグをリセット
+
+                        // クイズデータを特定
+                        const quiz = initialData.quizzes.find(q => q.id === currentQuizId);
+                        const title = quiz ? quiz.title : 'クイズ';
+    
+                        // 時間計測と記録
+                        if (quizTimer.startTime) {
+                            const elapsed = Math.round((Date.now() - quizTimer.startTime) / 1000);
+                            recordSession(title, elapsed);
+                            currentQuizElapsed = elapsed;
+                            quizTimer.startTime = null;
+                            saveState();
                     }
 
                     // --- ▼▼▼ 追加: 意見フォームからの復帰処理 ▼▼▼ ---
