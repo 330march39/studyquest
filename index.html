@@ -65,19 +65,6 @@
     </style>
 
     <script>
-        // ▼▼▼ 追加: システムレベルでのメニュー・ドラッグ禁止処理 ▼▼▼
-        
-        // 1. 右クリック（コンテキストメニュー）をページ全体で禁止
-        document.addEventListener('contextmenu', (e) => {
-            // 開発中は不便かもしれないので、必要ならコメントアウトしてください
-            e.preventDefault(); 
-        }, { passive: false });
-
-        // 2. ドラッグ開始イベントをページ全体で禁止
-        // (CSSが効かないブラウザ対策)
-        document.addEventListener('dragstart', (e) => {
-            e.preventDefault();
-        }, { passive: false });
         // 修正箇所: 登録済みかチェックし、未登録なら強制ライトモードにする
         (function() {
             let isRegistered = false;
@@ -344,42 +331,10 @@
             background-color: inherit; 
         }
         
-        /* ▼▼▼ 修正・追加: 全要素で長押し・ドラッグ・保存を徹底禁止 ▼▼▼ */
-        *, *::before, *::after {
-            /* iOSでの長押しメニュー(保存や共有)を禁止 */
-            -webkit-touch-callout: none !important;
-            
-            /* 画像やリンクのドラッグを禁止 */
-            -webkit-user-drag: none !important;
-            user-drag: none;
-            
-            /* タキスト選択を禁止 (入力欄以外) */
-            user-select: none;
-            -webkit-user-select: none;
+        /* 3. 画像やSVGアイコンの長押しメニュー（保存など）を禁止 (主にiOS) */
+        img, svg {
+            -webkit-touch-callout: none;
         }
-
-        /* 画像そのものをクリック（タッチ）判定から外す */
-        /* これにより、画像の上で長押ししても「奥にある背景」を押したことになり、メニューが出なくなります */
-        img, svg, video {
-            pointer-events: none !important;
-        }
-
-        /* 例外1: 入力フォームは操作可能にする */
-        input, textarea, select, [contenteditable] {
-            -webkit-touch-callout: default !important;
-            user-select: text !important;
-            -webkit-user-select: text !important;
-            pointer-events: auto !important;
-        }
-
-        /* 例外2: ボタンやクリック可能な要素内の画像は、親のクリックを邪魔しないようにする */
-        /* 上記の img { pointer-events: none } で解決済みですが、念のため */
-        button img, a img, .clickable img {
-            pointer-events: none !important;
-        }
-        
-        /* もし「画像自体をクリックさせたい」特別な要素がある場合は、そのクラスに pointer-events: auto をつけてください */
-        /* ▲▲▲ 修正ここまで ▲▲▲ */
         /* --- スワイプ機能用CSS --- */
         .swipe-container {
             position: relative;
