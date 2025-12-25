@@ -2248,7 +2248,7 @@
                         url: 'https://330march39.github.io/games/just1m_37928/', 
                         cost: 10000, 
                         icon: 'gamepad-2',
-                        // ▼▼▼ ここに追加 ▼▼▼
+                        description: '1.00秒ピッタリでストップウォッチを止める反射神経ゲームです。\n集中力を研ぎ澄まして挑戦しましょう！',
                         previews: [
                             'just100s.png', // 画像1
                             'just100s_2.png',
@@ -6732,6 +6732,26 @@
                 } else {
                     previewSection.classList.add('hidden');
                 }
+
+                const descEl = $('#detail-description');
+                    let descriptionText = "";
+
+                    if (type === 'theme') {
+                        descriptionText = "アプリ全体のテーマカラーを変更できます。\n気分に合わせて色を変えて、モチベーションを上げましょう！";
+                    } else if (type === 'background') {
+                        descriptionText = "ホーム画面や集中モードの背景画像を変更できます。\nお気に入りの風景でリラックスしながら学習できます。";
+                    } else if (type === 'music') {
+                        descriptionText = "クエスト（集中モード）中に再生できるBGMです。\n「設定 > クエスト > BGM設定」からプレイリストに追加して使用します。";
+                    } else if (type === 'game') {
+                        // データ定義に追加した description があればそれを使い、なければデフォルト文を表示
+                        descriptionText = itemData.description || "ブレイクタイム（休憩中）に遊べるミニゲームです。\n短時間でリフレッシュして、次の学習に備えましょう。";
+                    } else {
+                        // その他（予備）
+                        descriptionText = "このアイテムを使用すると、学習体験がより豊かになります。LPを貯めて交換しましょう。";
+                    }
+
+                    // 改行コード(\n)を<br>タグに変換して表示
+                    descEl.innerHTML = descriptionText.replace(/\n/g, '<br>');
 
                 // --- ▼▼▼ ここからアクションボタンのロジック変更 ▼▼▼ ---
                 
