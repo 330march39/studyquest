@@ -3468,8 +3468,8 @@ html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
                             // ▼▼▼ 修正：変化があったかどうかに応じてメッセージを出し分ける ▼▼▼
                             const isChanged = (oldGrade !== newGrade);
                             const bodyText = isChanged 
-                                ? `新しい学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です。<br>正しく反映されているか確認してください。`
-                                : `現在の登録学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です。<br>変更がある場合は修正してください。`;
+                                ? `新しい学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です<br>変更がある場合は修正してください`
+                                : `現在の登録学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です<br>変更がある場合は修正してください`;
 
                             // 汎用ポップアップを全員に表示
                             setTimeout(() => {
