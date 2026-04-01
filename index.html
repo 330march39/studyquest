@@ -1427,6 +1427,13 @@ html.dark .center-fab {
 #bottom-nav {
     box-shadow: none !important;
 }
+        /* ▼▼▼ 追加：壁紙全体適用＆ライトモード時のセクションタイトル文字色変更 ▼▼▼ */
+html.global-bg-light .text-xs.font-bold.uppercase.tracking-wider {
+    color: #1A1A1D !important; /* アプリ内で使われている text-gray-800 の黒色 */
+    
+    /* 【おすすめ】文字の周りにうっすら白いフチ(影)をつけると、柄のある壁紙でも圧倒的に読みやすくなります */
+    text-shadow: 0px 1px 3px rgba(255, 255, 255, 0.9), 0px 0px 2px rgba(255, 255, 255, 1);
+}
     </style>
 </head>
 <body class="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 overflow-hidden h-[100dvh] antialiased">
@@ -2695,8 +2702,20 @@ html.dark .center-fab {
                     { id: 'nihonshi_27', title: "日本史㉗～江戸時代～", subject: "日本史", genre: "中学", tags: ['JHS','nihonshi'], url: "https://forms.gle/F6PzpmzVzxRTHBxm6" },
                     { id: 'nihonshi_28', title: "歴史総復習～明治時代②～", subject: "日本史", genre: "中学", tags: ['JHS','nihonshi'], url: "https://forms.gle/bhXeJo6HbqhrZ9bF6" },
 
-                    //世界史（中学） mi
+                    //世界史（中学）
                     { id: 'sekaishi_1', title: "世界史①～古代文明の発生～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSe4VHPhgiNEut0yNrDCit_W5q54EeFggQW6CQUkVtoS9UGxIg/viewform" },
+                    { id: 'sekaishi_2', title: "世界史②～様々な地域の古代文明～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSezd_y6auTM9lIOh1JXbBlTTstWddPU3h3ha1-H-1buRS1-3A/viewform" },
+                    { id: 'sekaishi_3', title: "世界史③～イスラーム世界の形成と発展～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSdoZoKFjSOLb0k8f1MFtbtCodPNyub_5I_M-emkDXfaTd1IQg/viewform" },
+                    { id: 'sekaishi_5_6', title: "世界史⑤右・⑥", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSd6o_KIap6YDp6HySBIeqNrmEhK4mubibR7SRimbPmeRhEZFg/viewform?usp=pp_url" },
+                    { id: 'sekaishi_7', title: "世界史⑦～近代ヨーロッパ・アメリカ世界の成立～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSckVYDVAbraT0_v3SxLI3cr349YzNx5KMv5tH9OvmNzdwz6pw/viewform?usp=pp_url" },
+                    { id: 'sekaishi_8', title: "世界史⑧～近代ヨーロッパ・アメリカ世界の成立～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLScc8W1VWjXOuDIkM_WpE7EjsdabRAsVSTDWnnCuQyMRidE4sw/viewform?usp=pp_url" },
+                    { id: 'sekaishi_9', title: "世界史⑨～欧米における近代国民国家の発展～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSfLZF5ahXuPQIH9keVh3KHXoEhpsiwHrYd28JKkmAB-vD5j5Q/viewform?usp=pp_url" },
+                    { id: 'sekaishi_10', title: "世界史⑩～欧米における近代国民国家の発展～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSc_os-ky5jgDHTA6dq3_E1MA_22QXhrlh5H4pNGHyCOgRzXDA/viewform?usp=pp_url" },
+                    { id: 'sekaishi_11', title: "世界史⑪～帝国主義とアジアの民族運動～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSfLZF5ahXuPQIH9keVh3KHXoEhpsiwHrYd28JKkmAB-vD5j5Q/viewform?usp=pp_url" },
+                    { id: 'sekaishi_12', title: "世界史⑫～帝国主義とアジアの民族運動～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSfrvx1Zsl68eZbIiT0t_qUfkxwNaUiJCBaE4fjnSDYZbJAG8A/viewform?usp=pp_url" },
+                    { id: 'sekaishi_13', title: "世界史⑬～第一次世界大戦とロシア革命～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSc1i_7o0tDPfOIJAI1Xx5CdZTLwc1KCVEP3LQzJZ_YtiDssVg/viewform?usp=pp_url" },
+                    { id: 'sekaishi_14', title: "世界史⑭～ヴェルサイユ体制下の欧米諸国～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSc7OFGo1FNxJ_z22CjMd649sP_l0mpdRsZg_P8JPbFD637msQ/viewform?usp=pp_url" },
+                    { id: 'sekaishi_15', title: "世界史⑮～世界恐慌とファシズム諸国の侵略～", subject: "世界史", genre: "中学", tags: ['JHS','sekaishi'], url: "https://docs.google.com/forms/d/e/1FAIpQLSeLprqPbZCZv2ufQ2qYqltnRiUE1FsBYODa_eNwOVO1NqZwBw/viewform?usp=pp_url" },
 
                     //公民（中学）mi
                     { id: 'komin_19', title: "公民①～⑨", subject: "公民", genre: "中学", tags: ['JHS','komin'], url: "https://forms.gle/9KPrvLkPmENeLrVR9" },
@@ -2720,9 +2739,11 @@ html.dark .center-fab {
 
                 // ▼▼▼ 追加: バナーデータ ▼▼▼
                 banners: [
-                    { id: 1, url: 'banner_1_1.png', link: '' }, // 画像パスを修正してください
+                    { id: 4, url: 'banner_4.png', link: 'action:setting' },
+                    { id: 5, url: 'banner_5.png', link: 'item:themes' },
+                    { id: 3, url: 'banner_3.png', link: 'item:game:NumberPlace' },
                     { id: 2, url: 'banner_2.png', link: 'action:feedback' },
-                    { id: 3, url: 'banner_3.png', link: 'item:game:NumberPlace' }
+                    { id: 1, url: 'banner_1_1.png', link: '' }, // 画像パスを修正してください
                 ],
                 
                 themes: {
@@ -2733,6 +2754,15 @@ html.dark .center-fab {
                     purple: { name: 'クッキー', color: '#5B4420', dark: '#5B4420', cost: 2500 },
                     pink: { name: 'ティー', color: '#799832', dark: '#799832', cost: 3000 },
                     teal: { name: 'ストロベリー', color: '#B0312D', dark: '#B0312D', cost: 3500 },
+                    theme_1: { name: 'アンティークローズ', color: '#D58D8D', dark: '#D58D8D', cost: 4000 },
+                    theme_2: { name: 'テラコッタ', color: '#E2725B', dark: '#E2725B', cost: 3500 },
+                    theme_3: { name: 'ラベンダー', color: '#A78BFA', dark: '#A78BFA', cost: 3500 },
+                    theme_4: { name: 'モカニュートラル', color: '#A47864', dark: '#A47864', cost: 4000 },
+                    theme_5: { name: 'ラムネ', color: '#95DBEA', dark: '#95DBEA', cost: 4000 },
+                    theme_6: { name: 'グレージュ', color: '#5C534A', dark: '#5C534A', cost: 4000 },
+                    theme_7: { name: 'ボルドー', color: '#8D151B', dark: '#8D151B', cost: 4500 },
+                    theme_8: { name: 'アイシーブルー', color: '#4D4D90', dark: '#4D4D90', cost: 4500 },
+                    theme_9: { name: 'カームグリーン', color: '#AFC7B7', dark: '#AFC7B7', cost: 5000 },
                 },
                 backgrounds: {
                     default: { name: 'デフォルト', url: '', cost: 0 , tone: 'system' },
@@ -2749,7 +2779,29 @@ html.dark .center-fab {
                     suisai1: { name: '水彩（ブルー）', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_enogu7.png', cost: 9000, tone: 'light' },
                     suisai2: { name: '水彩（オレンジ）', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_enogu2.png', cost: 9000, tone: 'light' },
                     suisai3: { name: '水彩（グレー）', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_enogu1.png', cost: 9000, tone: 'light' },
-                    //summer: { name: '夏空', url: 'https://sozaino.site/wp-content/uploads/2024/08/okumono-haikei2-.png', cost: 7000, tone: 'light' },
+                    //summer_sky: { name: '夏空', url: 'https://sozaino.site/wp-content/uploads/2024/08/okumono-haikei2-.png', cost: 7000, tone: 'light' },
+                    //summer_umi: { name: '夏の海', url: 'https://sozaino.site/wp-content/uploads/2025/08/okumono_natsu_umi_.png', cost: 7000, tone: 'light' },
+                    //summer_inaka: { name: '夏の田舎', url: 'https://sozaino.site/wp-content/uploads/2025/07/okumono_natsuinaka_.png', cost: 7000, tone: 'light' },
+                    dotdurade1: { name: 'ドットグラデ（赤青）', url: 'https://sozaino.site/wp-content/uploads/2026/01/okumono_kouka22.png', cost: 5000, tone: 'dark' },
+                    //dotdurade2: { name: 'ドットグラデ（黄青）', url: 'https://sozaino.site/wp-content/uploads/2026/01/okumono_kouka29.png', cost: 7000, tone: 'light' },
+                    //wahamon1: { name: '和風波紋（赤色）', url: 'https://sozaino.site/wp-content/uploads/2025/08/okumono_suimen1.png', cost: 7000, tone: 'light' },
+                    //wahamon2: { name: '和風波紋（紫色）', url: 'https://sozaino.site/wp-content/uploads/2025/08/okumono_suimen7.png', cost: 7000, tone: 'light' },
+                    wahamon3: { name: '和風波紋（紺色）', url: 'https://sozaino.site/wp-content/uploads/2025/08/okumono_suimen3.png', cost: 7000, tone: 'light' },
+                    //check: { name: 'シンプルチェック', url: 'https://sozaino.site/wp-content/uploads/2025/05/okumono_ki321.png', cost: 7000, tone: 'light' },
+                    //shape: { name: 'ジオメトリック', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_shape8.png', cost: 7000, tone: 'light' },
+                    //pastelcheck1: { name: 'パステルチェック（ピンク）', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_shape9.png', cost: 7000, tone: 'light' },
+                    //pastelcheck2: { name: 'パステルチェック（ブルー）', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_shape11.png', cost: 7000, tone: 'light' },
+                    //suuji: { name: 'シンプルな数字', url: 'https://sozaino.site/wp-content/uploads/2024/03/okumono_no9.png', cost: 7000, tone: 'light' },
+                    sakura: { name: '桜吹雪', url: 'https://sozaino.site/wp-content/uploads/2023/01/sakurahubuki10.png', cost: 6000, tone: 'light' },
+                    //botanical1: { name: 'ボタニカル（グリーン）', url: 'https://sozaino.site/wp-content/uploads/2025/02/okumono_syokubutsu3.png', cost: 7000, tone: 'light' },
+                    //botanical1: { name: 'ボタニカル（オレンジ）', url: 'https://sozaino.site/wp-content/uploads/2025/02/okumono_syokubutsu6.png', cost: 7000, tone: 'light' },
+                    komorebi: { name: '木漏れ日', url: 'https://sozaino.site/wp-content/uploads/2024/03/okumono_mori8.png', cost: 6000, tone: 'light' },
+                    bakery: { name: 'ベーカリー', url: 'https://sozaino.site/wp-content/uploads/2022/05/pan42.png', cost: 9000, tone: 'light' },
+                    //onigiri: { name: 'おにぎり', url: 'https://sozaino.site/wp-content/uploads/2022/05/onigiri50.png', cost: 7000, tone: 'light' },
+                    //odango: { name: 'お団子', url: 'https://sozaino.site/wp-content/uploads/2022/04/dango5.png', cost: 7000, tone: 'light' },
+                    //himawari: { name: 'ひまわり', url: 'https://sozaino.site/wp-content/uploads/2023/09/okumono-himawari5.png', cost: 7000, tone: 'light' },
+                    //ice: { name: 'アイス', url: 'https://sozaino.site/wp-content/uploads/2023/05/icecream110.png', cost: 7000, tone: 'light' },
+                    //suika: { name: 'すいか', url: 'https://sozaino.site/wp-content/uploads/2025/03/okumono_suika3.png', cost: 7000, tone: 'light' },
                 },
                 
                 games: {
@@ -3287,7 +3339,8 @@ html.dark .center-fab {
                         icon: '🙂',
                         grade: '',
                         id: Math.random().toString(36).substring(2, 9), // 簡易ID
-                        feedbackRewardClaimed: false
+                        feedbackRewardClaimed: false,
+                        lastPromotedYear: null // ★これを追加: 最後に自動進級処理を行った年
                     },
                     profile: { 
                         lp: 0, 
@@ -3379,6 +3432,80 @@ html.dark .center-fab {
                     state.tasks = []; // タスクを空にする
                     state.profile.tasksLastUpdated = today; // 更新日を今日に設定
                 }
+                // ▼▼▼ 5. ここから追加：4月1日の自動進級処理 ▼▼▼
+                if (state.user.isRegistered && state.user.grade) {
+                    const now = new Date();
+                    const currentYear = now.getFullYear();
+                    const currentMonth = now.getMonth() + 1; // 月は0から始まるので+1
+
+                    // 4月以降であるかチェック
+                    if (currentMonth >= 4) {
+                        // 今年の進級処理がまだ終わっていない場合のみ実行
+                        if (state.user.lastPromotedYear !== currentYear) {
+                            const oldGrade = state.user.grade;
+                            let newGrade = oldGrade;
+
+                            // 学年の文字から「学校種別」と「学年(数字)」を抜き出す
+                            const match = oldGrade.match(/^(小学|中学|高校)(\d)年生$/);
+                            if (match) {
+                                const school = match[1];
+                                const year = parseInt(match[2], 10);
+                                
+                                // 最高学年未満なら +1 年生にする
+                                if (year < (school === '小学' ? 6 : 3)) {
+                                    newGrade = `${school}${year + 1}年生`;
+                                } else {
+                                    // 卒業・進学時の処理
+                                    if (school === '小学') newGrade = '中学1年生';
+                                    else if (school === '中学') newGrade = '高校1年生';
+                                    else if (school === '高校') newGrade = '大学・専門学生';
+                                }
+                            }
+
+                            // 変更の有無に関わらず新しい学年をセット
+                            state.user.grade = newGrade;
+                            
+                            // ▼▼▼ 修正：変化があったかどうかに応じてメッセージを出し分ける ▼▼▼
+                            const isChanged = (oldGrade !== newGrade);
+                            const titleText = isChanged ? '🌸 新年度になりました 🌸' : '🌸 新年度のご確認 🌸';
+                            const bodyText = isChanged 
+                                ? `新しい学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です。<br>正しく反映されているか確認してください。`
+                                : `現在の登録学年は<br><span class="text-2xl font-black primary-text my-2 inline-block">${newGrade}</span><br>です。<br>変更がある場合は修正してください。`;
+
+                            // 汎用ポップアップを全員に表示
+                            setTimeout(() => {
+                                openGeneralConfirm(
+                                    titleText, 
+                                    `<img src="banner_4.png" class="w-full h-auto rounded-xl mb-4 shadow-sm" alt="進級・進学おめでとうございます">
+                                     <span class="block text-base text-gray-800 dark:text-gray-200 leading-normal">${bodyText}</span>`,
+                                    'graduation-cap', // アイコン
+                                    '確認した (閉じる)', // 完了ボタン
+                                    'primary-bg', // 完了ボタンの色
+                                    () => {
+                                        // OK時は閉じるだけ
+                                    },
+                                    '学年を修正する', // 修正ボタン
+                                    () => {
+                                        // 1. 裏側で設定タブを開く
+                                        const settingsTab = document.querySelector('.tab-btn[data-page="settings-page"]');
+                                        if (settingsTab) settingsTab.click();
+                                        
+                                        // 2. 画面遷移アニメーションを少し待ってからプロフィール設定を開く
+                                        setTimeout(() => {
+                                            if (typeof profilePage !== 'undefined') profilePage.open();
+                                        }, 300);
+                                    }
+                                );
+                            }, 1500); 
+                            // ▲▲▲ 修正ここまで ▲▲▲
+                            
+                            // 処理済みとして今年の年数を記録
+                            state.user.lastPromotedYear = currentYear;
+                            saveState();
+                        }
+                    }
+                }
+                // ▲▲▲ 追加ここまで ▲▲▲
             };
             
             const saveState = () => localStorage.setItem('quizAppUltimateV8', JSON.stringify(state));
@@ -3447,9 +3574,17 @@ html.dark .center-fab {
                 if (effectiveTone === 'dark') {
                     document.documentElement.classList.add('dark');
                     document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.remove('global-bg-light'); // ←追加
                 } else {
                     document.documentElement.classList.remove('dark');
                     document.documentElement.setAttribute('data-theme', 'light');
+                    
+                    // ▼▼▼ 追加：壁紙全体適用 ＆ 画像あり ＆ ライトモード の時だけ目印のクラスをつける ▼▼▼
+                    if (isGlobal && hasImage) {
+                        document.documentElement.classList.add('global-bg-light');
+                    } else {
+                        document.documentElement.classList.remove('global-bg-light');
+                    }
                 }
             
                 // --- 3. 背景画像の適用ロジック ---
@@ -7298,6 +7433,10 @@ const breakSettingsPage = new SubPage('break-settings-screen', {
                 state.user.icon = wizardData.tempProfile.icon;
                 state.user.grade = wizardData.tempProfile.grade;
                 state.user.isRegistered = true;
+
+                // ▼▼▼ これを追加: 登録時の年を記録（1〜3月なら「去年の4月に進級した」扱いにする） ▼▼▼
+                const now = new Date();
+                state.user.lastPromotedYear = (now.getMonth() + 1 >= 4) ? now.getFullYear() : now.getFullYear() - 1;
                 
                 addLP(1000, 'はじめまして！', false);
                 state.lastLogin = new Date().toDateString();
