@@ -8178,13 +8178,46 @@ const checkQuestResume = () => {
             // ▲▲▲ 追加ここまで ▲▲▲
 
             const init = () => {
+                // ▼▼▼ 追加: 起動時にクラッシュ復帰かどうかを判定 ▼▼▼
+                if (localStorage.getItem('SQ_IsVideoPreviewing') === 'true') {
+                    // フラグをリセット
+                    localStorage.setItem('SQ_IsVideoPreviewing', 'false');
+                    
+                    // 起動アニメーションが終わる頃(約2秒後)にポップアップを表示
+                    setTimeout(() => {
+                        openGeneralConfirm(
+                            'エラーからの復帰',
+                            'アプリが強制終了しました。\n動作が不安定な場合や、画面が表示されない場合には、一度アプリを完全に終了してから立ち上げ直してください。',
+                            'alert-octagon',
+                            '確認しました',
+                            'bg-red-500 hover:bg-red-600',
+                            () => {}, // OK時は閉じるだけ
+                            null // キャンセルボタンは隠す
+                        );
+                    }, 2000);
+                }
                 if (window.Chart) {
                     Chart.defaults.font.family = "'LINE Seed JP', 'Inter', 'Noto Sans JP', sans-serif";
                 }
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register('sw.js')
-                        .then(registration => console.log('Service Worker登録成功:', registration))
+                        .then(registration => {console.log('Service Worker登録成功:', registration);
+                        // ▼▼▼ 追加: 更新を検知してキャッシュをリセットする処理 ▼▼▼
+                            registration.onupdatefound = () => {
+                                const installingWorker = registration.installing;
+                                if (installingWorker) {
+                                    installingWorker.onstatechange = () => {
+                                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                            console.log('新しいバージョンが見つかりました。最新情報に更新します...');
+                                            // Service Workerに「今すぐ新しいキャッシュに切り替えて」と命令する
+                                            installingWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        }
+                                    };
+                                }
+                            };
+                        })
                         .catch(error => console.log('Service Worker登録失敗:', error));
+                        
                 }
                 // ★追加: 画面の他の場所をタップしたら開いているスワイプメニューを閉じる処理
                 document.addEventListener('touchstart', (e) => {
@@ -8203,6 +8236,26 @@ const checkQuestResume = () => {
                         }
                     });
                 }, { passive: true });
+                // ▼▼▼ 追加: オフライン検知とポップアップ表示 ▼▼▼
+                const showOfflinePopup = () => {
+                    openGeneralConfirm(
+                        'オフラインです',
+                        '現在インターネットに接続されていません。\n新規アイテムの交換や背景やBGMなど、一部の機能が使用できない場合があります。',
+                        'wifi-off',
+                        '確認しました',
+                        'bg-gray-500 hover:bg-gray-600 text-white', // ボタンの色（グレー）
+                        () => {}, // OKを押したら閉じるだけ
+                        null // キャンセルボタンは隠す
+                    );
+                };
+
+                // 起動時にオフラインだった場合（他のポップアップと被らないよう少し遅延させる）
+                if (!navigator.onLine) {
+                    setTimeout(showOfflinePopup, 1500);
+                }
+
+                // プレイ中に通信が切れた瞬間にも表示する
+                window.addEventListener('offline', showOfflinePopup);
 
                 // システムのテーマ変更をリアルタイムで監視する
                 if (window.matchMedia) {
@@ -8679,6 +8732,7 @@ const renderStatusPageContent = () => {
             const itemDetailPage = new SubPage('item-detail-screen', {
                 onClose: () => {
                     stopMusicPreview(); // 閉じるときに音楽を止める
+                    localStorage.setItem('SQ_IsVideoPreviewing', 'false');
                 }
             });
 
@@ -8810,6 +8864,7 @@ const openItemDetailScreen = (id, type) => {
     // プレビューエリア（ゲーム用）
     const previewSection = $('#detail-preview-section');
     if (type === 'game' && itemData.previews && itemData.previews.length > 0) {
+        localStorage.setItem('SQ_IsVideoPreviewing', 'true');
         previewSection.classList.remove('hidden');
         renderGamePreviews(itemData); // ※プレビュー画像サイズは renderGamePreviews 内で制御
     } else {
@@ -9714,10 +9769,10 @@ const renderGamePreviews = (game) => {
         // ★修正: indexによる分岐を削除し、全て aspect-[9/16] で統一
         item.className = 'preview-item w-[70vw] md:w-[300px] aspect-[9/16] flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-700 snap-center shadow-sm';
         
-        const isVideo = url.endsWith('.mp4') || url.endsWith('.webm');
+        const isVideo = url.toLowerCase().endsWith('.mp4') || url.toLowerCase().endsWith('.webm');
         
         if (isVideo) {
-            item.innerHTML = `<video src="${url}" controls playsinline muted class="w-full h-full object-cover pointer-events-auto"></video>`;
+            item.innerHTML = `<video src="${url}" autoplay controls playsinline muted class="w-full h-full object-cover pointer-events-auto bg-gray-900"></video>`;
         } else {
             // object-coverではなく object-contain にすると全体が見えますが、
             // 「同様のサイズ」とのご要望なのでデザインの一貫性を保つため object-cover にしています。
